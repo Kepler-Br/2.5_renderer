@@ -17,18 +17,100 @@ struct wall
     int nextSectorIndex;
 };
 
+struct bunch
+{
+    int wallIndex;
+    int wallCount;
+};
+
 class PlayState: public iGameState
 {
     InputManager *inputManager;
     std::vector<sector> sectors;
     std::vector<wall> walls;
 
-    glm::vec2 point1 = glm::vec2(70.0f, 10.0f);
-    glm::vec2 point2 = glm::vec2(70.0f, 170.0f);
-    glm::vec2 playerPos = glm::vec2(50.0f);
-     float angle = 0.0f;
+    glm::vec2 playerPos = glm::vec2(90.0f, 50.0f);
+    int lastPlayerSector = 0;
+    float angle = 0.0f;
 
-    bool insideSector(glm::vec2 coord, int sectorIndex)
+    const std::vector<int> getSectorsToVisit()
+    {
+        std::vector<int> sectorsToVisit;
+        sectorsToVisit.reserve(256);
+        sectorsToVisit.push_back(lastPlayerSector);
+        const sector& currentSector = sectors[lastPlayerSector];
+
+        glm::vec2 playerFacingVector = glm::normalize(playerPos-glm::vec2(playerPos.x + cos(angle), playerPos.y + sin(angle)));
+        for(int wallIndex = currentSector.startWall; wallIndex < currentSector.startWall + currentSector.numWalls-1; wallIndex++)
+        {
+            const wall & currentWall = walls[wallIndex];
+            const int sectorPortal = currentWall.nextSectorIndex;
+            if(sectorPortal == -1)
+                continue;
+            const wall & nextWall = walls[wallIndex+1];
+            glm::vec2 wallVector = currentWall.point - nextWall.point;
+            glm::vec2 wallNormal = glm::normalize(glm::vec2(-wallVector.y, wallVector.x));
+            float dot = glm::dot(playerFacingVector, wallNormal);
+            if(dot > -0.5f)
+            {
+                sectorsToVisit.push_back(sectorPortal);
+            }
+        }
+
+        return sectorsToVisit;
+    }
+
+     const std::vector<bunch> createBunches()
+     {
+        const std::vector<int> sectorsToVisit = getSectorsToVisit();
+        std::vector<bunch> bunches;
+        bunches.reserve(1024);
+
+        glm::vec2 playerFacingVector = glm::normalize(playerPos-glm::vec2(playerPos.x + cos(angle), playerPos.y + sin(angle)));
+        for(const int &secIndex : sectorsToVisit)
+        {
+            const sector &sec = sectors[secIndex];
+            bunch newBunch {-1, -1};
+            for(int wallIndex = sec.startWall; wallIndex < sec.startWall+sec.numWalls-1; wallIndex++)
+            {
+                const wall &currentWall = walls[wallIndex];
+                const wall &nextWall = walls[wallIndex+1];
+                glm::vec2 wallVector = currentWall.point - nextWall.point;
+                glm::vec2 wallNormal = glm::normalize(glm::vec2(-wallVector.y, wallVector.x));
+                float dot = glm::dot(playerFacingVector, wallNormal);
+                // If wall is visible.
+                if(dot > -0.5f)
+                {
+                    // If newBunch was started.
+                    if(newBunch.wallIndex != -1)
+                        // Add another wall to it;
+                        newBunch.wallCount++;
+                    else
+                    {
+                        newBunch.wallCount = 1;
+                        newBunch.wallIndex = wallIndex;
+                    }
+                }
+                else
+                // If new bunch was started but next wall is not visible.
+                if(newBunch.wallIndex != -1)
+                {
+                    bunches.push_back(newBunch);
+                    newBunch = {-1, -1};
+                }
+            }
+            // Sector ends. Add bunch to pile if bunch was started;
+            if(newBunch.wallIndex != -1)
+            {
+                bunches.push_back(newBunch);
+                newBunch = {-1, -1};
+            }
+        }
+        return bunches;
+
+     }
+
+    bool isInsideSector(glm::vec2 coord, int sectorIndex)
     {
         const sector sec = sectors[sectorIndex];
         int linesIntersected = 0;
@@ -44,6 +126,37 @@ class PlayState: public iGameState
         return (linesIntersected%2 == 0? false : true);
     }
 
+    int inside(glm::vec2 coord, int lastKnownSector)
+    {
+        if(lastKnownSector != -1)
+        {
+            if(isInsideSector(coord, lastKnownSector))
+                return lastKnownSector;
+            const sector &sec = sectors[lastKnownSector];
+            const int startWall = sec.startWall;
+            const int numWalls = sec.numWalls;
+            for(int i = startWall; i < startWall+numWalls; i++)
+            {
+                const wall &wll = walls[i];
+                const int sectorIndex = wll.nextSectorIndex;
+                if(sectorIndex == -1)
+                    continue;
+                if(isInsideSector(coord, sectorIndex))
+                    return sectorIndex;
+            }
+        }
+        for(int i = 0; i < sectors.size(); i++)
+        {
+            if(i == lastKnownSector)
+                continue;
+            if(isInsideSector(coord, i))
+                return i;
+        }
+        return -1;
+    }
+
+
+
 public:
     PlayState(Application *app);
     ~PlayState();
@@ -58,12 +171,6 @@ public:
     void render();
     void postRender();
 
-    bool intersect(glm::vec3 line11, glm::vec3 line12, glm::vec2 line21, glm::vec2 line22)
-    {
-        glm::vec3 x = glm::cross(line11, line12);
-
-
-    }
 };
 
 #endif // PLAYSTATE_H
