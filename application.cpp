@@ -32,6 +32,7 @@ Application::Application():
     window(800, 600),
     inputManager(InputManager::getInstance())
 {
+    window.setWindowTitle("Dukenukem portal rendering test.");
 }
 
 
