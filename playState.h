@@ -156,6 +156,21 @@ class PlayState: public iGameState
     }
 
 
+    glm::vec2 intersect(glm::vec2 one, glm::vec2 two, glm::vec2 three, glm::vec2 four)
+    {
+        auto cross = [](glm::vec2 one, glm::vec2 two)
+        {
+            return one.x*two.y-one.y*two.x;
+        };
+
+        float x = cross(one, two);
+        float y = cross(three, four);
+        float det = cross(glm::vec2(one.x - two.x, one.y - two.y), glm::vec2(three.x-four.x, three.y-four.y));
+        x = cross(glm::vec2(x, one.x-two.x), glm::vec2(y, three.x-four.x))/det;
+        y = cross(glm::vec2(x, one.y-two.y), glm::vec2(y, three.y-four.y))/det;
+        return glm::vec2(x, y);
+    }
+
 
 public:
     PlayState(Application *app);

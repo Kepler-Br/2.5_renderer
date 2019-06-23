@@ -16,7 +16,7 @@ PlayState::PlayState(Application *app):
              {{200.0f, 80.0f}, -1},{{320.0f, 80.0f}, 2},{{320.0f, 40.0f}, -1},{{200.0f, 40.0f}, 0},{{200.0f, 80.0f}, -1},
 
              {{320.0f, 40.0f}, 2},  {{320.0f, 80.0f}, 3}, {{360.0f, 80.0f}, -1}, {{360.0f, 40.0f}, -1}, {{320.0f, 40.0f}, -1},
-               {{320.0f, 80.0f}, -1} ,  {{320.0f, 150.0f}, -1}, {{360.0f, 150.0f}, -1},{{360.0f, 80.0f}, 2},{{320.0f, 80.0f}, -1},
+             {{320.0f, 80.0f}, -1} ,  {{320.0f, 150.0f}, -1}, {{360.0f, 150.0f}, -1},{{360.0f, 80.0f}, 2},{{320.0f, 80.0f}, -1},
             };
 }
 
@@ -68,7 +68,7 @@ void PlayState::render()
 {
     window.setColor(glm::vec3(1.0f, 1.0f, 1.0f));
     const float lookLength = 20.0f;
-//    const glm::vec2 point = inputManager->getRelativeMouseCoord();
+    //    const glm::vec2 point = inputManager->getRelativeMouseCoord();
 
     window.square(playerPos-glm::vec2(3.0f), glm::vec2(6.0f, 6.0f));
     glm::vec2 playerSight = glm::normalize(playerPos-glm::vec2(playerPos.x + cos(angle)*lookLength, playerPos.y + sin(angle)*lookLength));
@@ -139,6 +139,9 @@ void PlayState::render()
 
     }
 
+    glm::vec2 windowGeometry = window.getGeometry();
+    float hfov = 1.0f*0.73f*windowGeometry.y/windowGeometry.x;
+    float vfov = 1.0f*0.2f;
 
 
     // Wall 2.5D drawing.
@@ -154,9 +157,28 @@ void PlayState::render()
             glm::vec2 wallEdgeTwoWorldPosition = nextWall.point-playerPos;
             wallEdgeTwoWorldPosition = glm::vec2(wallEdgeTwoWorldPosition.x*cos(angle)+wallEdgeTwoWorldPosition.y*sin(angle),
                                                  wallEdgeTwoWorldPosition.x*sin(angle)-wallEdgeTwoWorldPosition.y*cos(angle));
-            const float wallHeight = 5.0f;
-            window.line(glm::vec2(wallEdgeOneWorldPosition.y, 300.0f-wallHeight/wallEdgeOneWorldPosition.x),
-                        glm::vec2(wallEdgeOneWorldPosition.y, 300.0f+wallHeight/wallEdgeOneWorldPosition.x));
+            const float wallHeight = 50.0f;
+            //            const float perspectiveDivide = 0.01f;
+            if(wallEdgeOneWorldPosition.x < 0.0f||wallEdgeTwoWorldPosition.x < 0.0f)
+                continue;
+            float xscale1 = (windowGeometry.x*hfov)/wallEdgeOneWorldPosition.x;
+            float xscale2 = (windowGeometry.x*hfov)/wallEdgeTwoWorldPosition.x;
+
+            window.line(glm::vec2(wallEdgeOneWorldPosition.y, wallHeight)*xscale1+windowGeometry.x/2,//perspectiveDivide+200.0f,
+                        glm::vec2(wallEdgeOneWorldPosition.y, -wallHeight)*xscale1+windowGeometry.x/2);
+            window.line(glm::vec2(wallEdgeTwoWorldPosition.y, wallHeight)*xscale2+windowGeometry.x/2,
+                        glm::vec2(wallEdgeTwoWorldPosition.y, -wallHeight)*xscale2+windowGeometry.x/2);
+
+            //            glm::vec2 iOne = intersect(glm::vec2(wallEdgeOneWorldPosition.y, wallHeight)/wallEdgeOneWorldPosition.x/perspectiveDivide+200.0f,
+            //                                       glm::vec2(wallEdgeOneWorldPosition.y, -wallHeight)/wallEdgeOneWorldPosition.x/perspectiveDivide+200.0f,
+            //                                       glm::vec2(-0.0001f, 0.0001f), glm::vec2(-2.0f,5.0f));
+            //            window.line(glm::vec2(wallEdgeOneWorldPosition.y, wallHeight)/wallEdgeOneWorldPosition.x/perspectiveDivide+200.0f,
+            //                        glm::vec2(wallEdgeTwoWorldPosition.y, wallHeight)/wallEdgeTwoWorldPosition.x/perspectiveDivide+200.0f);
+
+            window.line(glm::vec2(wallEdgeOneWorldPosition.y, wallHeight)*xscale1+windowGeometry.x/2,
+                        glm::vec2(wallEdgeTwoWorldPosition.y, wallHeight)*xscale1+windowGeometry.x/2);
+            window.line(glm::vec2(wallEdgeOneWorldPosition.y, -wallHeight)*xscale2+windowGeometry.x/2,
+                        glm::vec2(wallEdgeTwoWorldPosition.y, -wallHeight)*xscale2+windowGeometry.x/2);
         }
     }
 
