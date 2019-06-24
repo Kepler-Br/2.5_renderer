@@ -4,11 +4,13 @@
 #include "application.h"
 #include "inputManager.h"
 #include <vector>
+#include <iostream>
 
 struct sector
 {
     int startWall;
     int numWalls;
+    float floor, ceiling;
 };
 
 struct wall
@@ -23,22 +25,31 @@ struct bunch
     int wallCount;
 };
 
+struct player
+{
+    int lastSector;
+    glm::vec3 position;
+    glm::vec3 velocity;
+    float angle,
+    angleSin,
+    angleCos,
+    yaw;
+};
+
 class PlayState: public iGameState
 {
     InputManager *inputManager;
     std::vector<sector> sectors;
     std::vector<wall> walls;
 
-    glm::vec2 playerPos = glm::vec2(90.0f, 50.0f);
-    int lastPlayerSector = 0;
-    float angle = 0.0f;
+    player pl;
 
     const std::vector<int> getSectorsToVisit()
     {
         std::vector<int> sectorsToVisit;
         sectorsToVisit.reserve(256);
-        sectorsToVisit.push_back(lastPlayerSector);
-        const sector& currentSector = sectors[lastPlayerSector];
+        sectorsToVisit.push_back(lastPlayerSectorIndex);
+        const sector& currentSector = sectors[lastPlayerSectorIndex];
 
         glm::vec2 playerFacingVector = glm::normalize(playerPos-glm::vec2(playerPos.x + cos(angle), playerPos.y + sin(angle)));
         for(int wallIndex = currentSector.startWall; wallIndex < currentSector.startWall + currentSector.numWalls-1; wallIndex++)
@@ -60,8 +71,8 @@ class PlayState: public iGameState
         return sectorsToVisit;
     }
 
-     const std::vector<bunch> createBunches()
-     {
+    const std::vector<bunch> createBunches()
+    {
         const std::vector<int> sectorsToVisit = getSectorsToVisit();
         std::vector<bunch> bunches;
         bunches.reserve(1024);
@@ -92,12 +103,12 @@ class PlayState: public iGameState
                     }
                 }
                 else
-                // If new bunch was started but next wall is not visible.
-                if(newBunch.wallIndex != -1)
-                {
-                    bunches.push_back(newBunch);
-                    newBunch = {-1, -1};
-                }
+                    // If new bunch was started but next wall is not visible.
+                    if(newBunch.wallIndex != -1)
+                    {
+                        bunches.push_back(newBunch);
+                        newBunch = {-1, -1};
+                    }
             }
             // Sector ends. Add bunch to pile if bunch was started;
             if(newBunch.wallIndex != -1)
@@ -108,7 +119,39 @@ class PlayState: public iGameState
         }
         return bunches;
 
-     }
+    }
+
+    void applyLevelCollision(const glm::vec2 &newPlayerPosition)
+    {
+        auto overlap = [](glm::vec2 one, glm::vec2 two)
+        {
+            return (glm::min(one.x, one.y) <= glm::max(two.x,two.y) && glm::min(two.x,two.y) <= glm::max(one.x,one.y));
+        };
+        const sector &playerSector = sectors[lastPlayerSectorIndex];
+        for (int wallIndex = playerSector.startWall; wallIndex < playerSector.startWall+ playerSector.numWalls -1; wallIndex++)
+        {
+            const wall &currentWall = walls[wallIndex];
+            const wall &nextWall = walls[wallIndex+1];
+            bool isWallIntersects = (overlap(glm::vec2(currentWall.point.x, nextWall.point.x),
+                                            glm::vec2(playerPos.x, newPlayerPosition.x)) &&
+                                    overlap(glm::vec2(currentWall.point.y, nextWall.point.y),
+                                                                     glm::vec2(playerPos.y, newPlayerPosition.y)));
+            glm::vec2 intersection;
+            if(isWallIntersects)
+            {
+                if (currentWall.nextSectorIndex != -1)
+                {
+
+                    playerPos = newPlayerPosition;
+                    return;
+                }
+                else
+                    return;
+            }
+        }
+        playerPos = newPlayerPosition;
+
+    }
 
     bool isInsideSector(glm::vec2 coord, int sectorIndex)
     {
@@ -119,8 +162,8 @@ class PlayState: public iGameState
             const glm::vec2 current = walls[i].point;
             const glm::vec2 next = walls[i+1].point;
             if (((current.y>coord.y) != (next.y>coord.y)) &&
-                (coord.x < (next.x-current.x) * (coord.y-current.y) / (next.y-current.y) + current.x) )
-                    linesIntersected ++;
+                    (coord.x < (next.x-current.x) * (coord.y-current.y) / (next.y-current.y) + current.x) )
+                linesIntersected ++;
         }
 
         return (linesIntersected%2 == 0? false : true);
@@ -156,18 +199,18 @@ class PlayState: public iGameState
     }
 
 
-    glm::vec2 intersect(glm::vec2 one, glm::vec2 two, glm::vec2 three, glm::vec2 four)
+    glm::vec2 intersect(glm::vec2 line11, glm::vec2 line12, glm::vec2 line21, glm::vec2 line22)
     {
         auto cross = [](glm::vec2 one, glm::vec2 two)
         {
             return one.x*two.y-one.y*two.x;
         };
 
-        float x = cross(one, two);
-        float y = cross(three, four);
-        float det = cross(glm::vec2(one.x - two.x, one.y - two.y), glm::vec2(three.x-four.x, three.y-four.y));
-        x = cross(glm::vec2(x, one.x-two.x), glm::vec2(y, three.x-four.x))/det;
-        y = cross(glm::vec2(x, one.y-two.y), glm::vec2(y, three.y-four.y))/det;
+        float x = cross(line11, line12);
+        float y = cross(line21, line22);
+        float det = cross(glm::vec2(line11.x - line12.x, line11.y - line12.y), glm::vec2(line21.x-line22.x, line21.y-line22.y));
+        x = cross(glm::vec2(x, line11.x-line12.x), glm::vec2(y, line21.x-line22.x))/det;
+        y = cross(glm::vec2(x, line11.y-line12.y), glm::vec2(y, line21.y-line22.y))/det;
         return glm::vec2(x, y);
     }
 

@@ -86,6 +86,13 @@ public:
                                      static_cast<int>(point2.x), static_cast<int>(point2.y));
     }
 
+    void vLine(glm::vec2 bottom, float length)
+    {
+        const glm::vec2 top = glm::vec2(bottom.x, bottom.y+length);
+        SDL_RenderDrawLine(renderer, static_cast<int>(bottom.x), static_cast<int>(bottom.y),
+                                     static_cast<int>(top.x), static_cast<int>(top.y));
+    }
+
     void square(const glm::vec2 &position, const glm::vec2 &geometry)
     {
         SDL_Rect rect = {static_cast<int>(position.x),
