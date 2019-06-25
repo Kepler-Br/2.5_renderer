@@ -4,7 +4,9 @@
 #include "application.h"
 #include "inputManager.h"
 #include <vector>
+#include <fstream>
 #include <iostream>
+#include <regex>
 
 struct sector
 {
@@ -43,6 +45,19 @@ class PlayState: public iGameState
     std::vector<wall> walls;
 
     player pl;
+
+    void readMap(const std::string &path)
+    {
+        using namespace std;
+
+        ifstream mapFile(path);
+        string line;
+        regex sectorRegex("s (\d+) (\d)+")
+        while(getline(mapFile, line))
+        {
+
+        }
+    }
 
     const std::vector<int> getSectorsToVisit()
     {
