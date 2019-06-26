@@ -6,6 +6,7 @@ CONFIG -= qt
 SOURCES += \
         application.cpp \
         checkTimer.cpp \
+        engine.cpp \
         inputManager.cpp \
         main.cpp \
         playState.cpp \
@@ -14,6 +15,7 @@ SOURCES += \
 HEADERS += \
     application.h \
     checkTimer.h \
+    engine.h \
     iGameState.h \
     iStateManager.h \
     inputManager.h \
