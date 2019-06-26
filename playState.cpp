@@ -4,28 +4,11 @@
 
 
 PlayState::PlayState(Application *app):
-    iGameState(app)
+    iGameState(app),
+    engine(app->getWindow())
 {
+    engine.readMap("map.txt");
     inputManager = InputManager::getInstance();
-    sectors = {{0, 5, 0.0f, 10.0f}, {5, 5, 0.0f, 10.0f}, {10, 5, 0.0f, 10.0f}, {15, 5, 0.0f, 10.0f}};
-    walls = {{{80.0f, 40.0f}, 3}, {{80.0f, 80.0f}, -1},
-             {{200.0f, 80.0f}, 1}, {{200.0f, 40.0f}, -1},
-             {{80.0f, 40.0f}, -1},
-
-
-             {{200.0f, 80.0f}, -1},{{320.0f, 80.0f}, 2},{{320.0f, 40.0f}, -1},{{200.0f, 40.0f}, 0},{{200.0f, 80.0f}, -1},
-
-             {{320.0f, 40.0f}, 2},  {{320.0f, 80.0f}, 3}, {{360.0f, 80.0f}, -1}, {{360.0f, 40.0f}, -1}, {{320.0f, 40.0f}, -1},
-             {{320.0f, 80.0f}, -1} ,  {{320.0f, 150.0f}, 0}, {{360.0f, 150.0f}, -1},{{360.0f, 80.0f}, 2},{{320.0f, 80.0f}, -1},
-            };
-
-        pl.lastSector = 0;
-        pl.position = glm::vec3(0);
-        pl.velocity = glm::vec3(0);
-        pl.angle = 0;
-        pl.angleSin = 0;
-        pl.angleCos = 0;
-        pl.yaw = 0;
 }
 
 PlayState::~PlayState()
@@ -39,22 +22,7 @@ void PlayState::input()
         app->exit();
     if(inputManager->isKeyDown(SDLK_ESCAPE))
         app->exit();
-    float playerSpeed = 5.0f;
-    if(inputManager->isKeyDown(SDLK_w))
-    {
-        glm::vec2 newPlayerPosition = glm::vec2(pl.position.x + cos(pl.angle)*playerSpeed, pl.position.y + sin(pl.angle)*playerSpeed);
-        applyLevelCollision(newPlayerPosition);
-    }
-    if(inputManager->isKeyDown(SDLK_s))
-    {
-        glm::vec2 newPlayerPosition = glm::vec2(pl.position.x - cos(pl.angle)*playerSpeed, pl.position.y - sin(pl.angle)*playerSpeed);
-        applyLevelCollision(newPlayerPosition);
-    }
-
-    if(inputManager->isKeyDown(SDLK_a))
-        angle -= M_PI/20.0f;
-    if(inputManager->isKeyDown(SDLK_d))
-        angle += M_PI/20.0f;
+    engine.input();
 }
 
 void PlayState::update()
@@ -65,10 +33,10 @@ void PlayState::update()
 void PlayState::fixedUpdate()
 {
 
-    int prevPlayerSector = pl.lastSector;
-    pl.lastSector = inside(pl.position, pl.lastSector);
-    if(prevPlayerSector != pl.lastSector)
-        std::cout << "Player sector changed from " << prevPlayerSector << " to " << pl.lastSector << std::endl;
+//    int prevPlayerSector = pl.lastSector;
+//    pl.lastSector = inside(pl.position, pl.lastSector);
+//    if(prevPlayerSector != pl.lastSector)
+//        std::cout << "Player sector changed from " << prevPlayerSector << " to " << pl.lastSector << std::endl;
 }
 
 void PlayState::lateUpdate() {}
@@ -81,8 +49,9 @@ void PlayState::preRender()
 
 void PlayState::render()
 {
-    window.setColor(glm::vec3(1.0f, 1.0f, 1.0f));
-    const float lookLength = 20.0f;
+    engine.render();
+//    window.setColor(glm::vec3(1.0f, 1.0f, 1.0f));
+//    const float lookLength = 20.0f;
     //    const glm::vec2 point = inputManager->getRelativeMouseCoord();
 
 //    window.square(playerPos-glm::vec2(3.0f), glm::vec2(6.0f, 6.0f));
@@ -163,7 +132,7 @@ void PlayState::render()
     int ybottom[800];
     for(int i = 0; i < 800; i++)
         ybottom[i] = 600-1;
-    const sector &curSec = sectors[lastPlayerSectorIndex];
+//    const sector &curSec = bsectors[pl.lastSector];
     // Wall 2.5D drawing.
 //    for(const bunch& bnch: bunches)
 //    {
