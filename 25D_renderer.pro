@@ -6,20 +6,23 @@ CONFIG -= qt
 SOURCES += \
         application.cpp \
         checkTimer.cpp \
-        engine.cpp \
         inputManager.cpp \
         main.cpp \
+        physicsengine.cpp \
         playState.cpp \
+        renderengine.cpp \
         window.cpp
 
 HEADERS += \
     application.h \
     checkTimer.h \
-    engine.h \
     iGameState.h \
     iStateManager.h \
     inputManager.h \
+    physicsengine.h \
     playState.h \
+    renderengine.h \
+    types.h \
     window.h
 
 LIBS += -lSDL2
