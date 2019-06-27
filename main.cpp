@@ -7,5 +7,5 @@
 int main()
 {
     Application app;
-    return app.execute(std::make_unique<PlayState>(&app));
+    return app.execute(std::make_unique<xenfa::PlayState>(&app));
 }
