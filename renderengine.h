@@ -21,7 +21,7 @@ class RenderEngine
         float x = glm::determinant(glm::mat2(point11, point12));
         float y = glm::determinant(glm::mat2(point21, point22));
         float det = glm::determinant(glm::mat2(glm::vec2(point11.x - point12.x, point11.y - point12.y),
-                                     glm::vec2(point21.x-point22.x, point21.y-point22.y)));
+                                               glm::vec2(point21.x-point22.x, point21.y-point22.y)));
         x = glm::determinant(glm::mat2(glm::vec2(x, point11.x-point12.x), glm::vec2(y, point21.x-point22.x)))/det;
         y = glm::determinant(glm::mat2(glm::vec2(x, point11.y-point12.y), glm::vec2(y, point21.y-point22.y)))/det;
         return glm::vec2(x, y);
@@ -34,7 +34,7 @@ class RenderEngine
 
     float lerp(float v0, float v1, float t)
     {
-      return v0 + t * (v1 - v0);
+        return v0 + t * (v1 - v0);
     }
 
     void drawFilledSquare(const glm::vec2 &pointOne, const glm::vec2 pointTwo, const float heightOne, const float heightTwo)
@@ -66,7 +66,7 @@ public:
         renderMap();
         renderRotatedMap();
         render3D();
-//        drawFilledSquare(glm::vec2(0.0f, 100.0f), glm::vec2(100.0f, 100.0f), 10, 20);
+        //        drawFilledSquare(glm::vec2(0.0f, 100.0f), glm::vec2(100.0f, 100.0f), 10, 20);
     }
 };
 }
