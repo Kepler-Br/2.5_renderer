@@ -64,7 +64,7 @@ public:
     void render()
     {
         renderMap();
-        renderRotatedMap();
+//        renderRotatedMap();
         render3D();
         //        drawFilledSquare(glm::vec2(0.0f, 100.0f), glm::vec2(100.0f, 100.0f), 10, 20);
     }
