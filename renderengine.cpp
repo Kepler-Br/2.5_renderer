@@ -68,19 +68,36 @@ void xenfa::RenderEngine::render3D()
         window.square(bias, glm::vec2(6.0f));
         window.line(glm::vec2(bias), glm::vec2(bias) + glm::vec2(0.0f, 20.0f));
 
-        if(rotateOne.z <= 0.0f || rotateTwo.z <= 0.0f)
+
+        if(rotateOne.z < 0.0f && rotateTwo.z < 0.0f)
         {
             currentWall = nextWall;
             continue;
         }
+        if(rotateOne.z <= 0.0f || rotateTwo.z <= 0.0f)
+        {
 
+
+            if(rotateOne.z < 0.0f)
+            {
+                glm::vec2 intersection = lineIntersection(glm::vec2(0.0f, 0.0f), glm::vec2(800.0f, 0.0f),
+                                                          glm::vec2(rotateTwo.x, rotateTwo.z), glm::vec2(rotateOne.x, rotateOne.z));
+                rotateOne = glm::vec3(intersection.x, 0.0f, intersection.y);
+            }
+            if(rotateTwo.z < 0.0f)
+            {
+
+                glm::vec2 intersection = lineIntersection(glm::vec2(0.0f, 0.0f), glm::vec2(800.0f, 0.0f),
+                                                          glm::vec2(rotateOne.x, rotateOne.z), glm::vec2(rotateTwo.x, rotateTwo.z));
+                rotateTwo = glm::vec3(intersection.x, 0.0f, intersection.y);
+
+            }
+
+        }
         drawFilledSquare(glm::vec2(rotateOne.x, rotateOne.y-ceiling)/rotateOne.z*hfov+bias,
                          glm::vec2(rotateTwo.x, rotateTwo.y-ceiling)/rotateTwo.z*hfov+bias,
                          ceiling/rotateOne.z*hfov,ceiling/rotateTwo.z*hfov);
-
-//        window.line(glm::vec2(rotateOne.x, rotateOne.y-ceiling)/rotateOne.z*hfov+bias,
-//        glm::vec2(rotateTwo.x, rotateTwo.y-ceiling)/rotateTwo.z*hfov+bias);
-
+        window.line(glm::vec2(rotateOne.x, rotateOne.z)+bias, glm::vec2(rotateTwo.x, rotateTwo.z)+bias);
         currentWall = nextWall;
     }
 
@@ -134,7 +151,7 @@ void xenfa::RenderEngine::renderRotatedMap()
         }
         else
         {
-             window.line(glm::vec2(rotateOne.x, rotateOne.z)+bias, glm::vec2(rotateTwo.x, rotateTwo.z)+bias);
+            window.line(glm::vec2(rotateOne.x, rotateOne.z)+bias, glm::vec2(rotateTwo.x, rotateTwo.z)+bias);
         }
         currentWall = nextWall;
     }
