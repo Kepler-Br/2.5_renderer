@@ -48,7 +48,7 @@ void xenfa::RenderEngine::render3D()
 
 
 
-    glm::vec2 bias = glm::vec2(300.0f, 400.0f);
+    glm::vec2 bias = glm::vec2(400.0f, 300.0f);
     Sector currentSector = sectors[player.lastSector];
     Wall currentWall = walls[currentSector.startWall];
     for(int i = 0; i < currentSector.numWalls; i++)
@@ -163,8 +163,18 @@ void xenfa::RenderEngine::render3D()
         //                         glm::vec2(rotateTwo.x, rotateTwo.y-ceiling)/rotateTwo.z*hfov+bias,
         //                         ceiling/rotateOne.z*hfov,ceiling/rotateTwo.z*hfov);
         window.line(glm::vec2(rotateOne.x, rotateOne.z)+bias, glm::vec2(rotateTwo.x, rotateTwo.z)+bias);
-        window.line(glm::vec2(-rotateOne.x*16.0f/rotateOne.z, -50.0f/rotateOne.z)+bias,
-                    glm::vec2(-rotateTwo.x*16.0f/rotateTwo.z, -50.0f/rotateTwo.z)+bias);
+        window.line(glm::vec2(-rotateOne.x*hfov/rotateOne.z, -50.0f/rotateOne.z*vfov)+bias,
+                    glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, -50.0f/rotateTwo.z*vfov)+bias);
+        window.line(glm::vec2(-rotateOne.x*hfov/rotateOne.z, 50.0f/rotateOne.z*vfov)+bias,
+                    glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, 50.0f/rotateTwo.z*vfov)+bias);
+
+        window.line(glm::vec2(-rotateOne.x*hfov/rotateOne.z, -50.0f/rotateOne.z*vfov)+bias,
+                    glm::vec2(-rotateOne.x*hfov/rotateOne.z, 50.0f/rotateOne.z*vfov)+bias);
+
+        window.line(glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, -50.0f/rotateTwo.z*vfov)+bias,
+                    glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, 50.0f/rotateTwo.z*vfov)+bias);
+
+//        drawFilledSquare()
         currentWall = nextWall;
     }
 
