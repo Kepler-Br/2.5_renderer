@@ -56,7 +56,11 @@ public:
 
     void setColor(const glm::ivec3 &color)
     {
-        SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b*255, 255);
+        SDL_SetRenderDrawColor(renderer,
+                               static_cast<uint8_t>(color.r),
+                               static_cast<uint8_t>(color.g),
+                               static_cast<uint8_t>(color.b*255),
+                               255);
     }
     /**
      *  \brief Sets pixel at position to color.
