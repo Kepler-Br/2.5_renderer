@@ -2,7 +2,7 @@
 
 void xenfa::RenderEngine::renderMap()
 {
-    for(auto &sector : sectors)
+    for(const auto &sector : sectors)
     {
         const glm::vec3 bias = glm::vec3(200.0f, 300.0f, 100.0f);
         window.setColor(glm::vec3(1.0f));
@@ -35,6 +35,7 @@ void xenfa::RenderEngine::renderMap()
 
 void xenfa::RenderEngine::render3D()
 {
+    window.setColor(glm::vec3(1.0f));
     static glm::vec3 pointOne = glm::vec3(10.0f, 0.0f, 2.0f);
     static glm::vec3 pointTwo = glm::vec3(300.0f, 0.0f, 4.0f);
     constexpr float w = 800.0f;
@@ -174,7 +175,9 @@ void xenfa::RenderEngine::render3D()
         window.line(glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, -50.0f/rotateTwo.z*vfov)+bias,
                     glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, 50.0f/rotateTwo.z*vfov)+bias);
 
-//        drawFilledSquare()
+//        drawFilledSquare(glm::vec2(-rotateOne.x*hfov/rotateOne.z, 50.0f/rotateOne.z*vfov)+bias,
+//                         glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, 50.0f/rotateTwo.z*vfov)+bias,
+//                         50.0f/rotateOne.z*vfov, 50.0f/rotateTwo.z*vfov);
         currentWall = nextWall;
     }
 
