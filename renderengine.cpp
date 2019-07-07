@@ -125,7 +125,7 @@ void xenfa::RenderEngine::render3D()
                          glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, 50.0f/rotateTwo.z*vfov)+bias,
                          -600.0f, -600.0f);
         // Ceiling
-        window.setColor(glm::vec3(0.0f, 1.0f, 0.0f));
+        window.setColor(glm::vec3(0.5f, 0.5f, 0.0f));
         drawFilledSquare(glm::vec2(-rotateOne.x*hfov/rotateOne.z, -50.0f/rotateOne.z*vfov)+bias,
                          glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, -50.0f/rotateTwo.z*vfov)+bias,
                          600.0f, 600.0f);
