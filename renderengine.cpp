@@ -2,7 +2,7 @@
 
 void xenfa::RenderEngine::renderMap()
 {
-    for(auto &sector : sectors)
+    for(const auto &sector : sectors)
     {
         const glm::vec3 bias = glm::vec3(200.0f, 300.0f, 100.0f);
         window.setColor(glm::vec3(1.0f));
@@ -35,6 +35,7 @@ void xenfa::RenderEngine::renderMap()
 
 void xenfa::RenderEngine::render3D()
 {
+    window.setColor(glm::vec3(1.0f));
     static glm::vec3 pointOne = glm::vec3(10.0f, 0.0f, 2.0f);
     static glm::vec3 pointTwo = glm::vec3(300.0f, 0.0f, 4.0f);
     constexpr float w = 800.0f;
@@ -48,7 +49,7 @@ void xenfa::RenderEngine::render3D()
 
 
 
-    glm::vec2 bias = glm::vec2(300.0f, 400.0f);
+    glm::vec2 bias = glm::vec2(400.0f, 300.0f);
     Sector currentSector = sectors[player.lastSector];
     Wall currentWall = walls[currentSector.startWall];
     for(int i = 0; i < currentSector.numWalls; i++)
@@ -110,61 +111,37 @@ void xenfa::RenderEngine::render3D()
         }
 
 
-//        if(rotateOne.z < 0.0f || rotateTwo.z < 0.0f)
-//        {
-
-
-//            if(rotateOne.z < 0.0f)
-//            {
-//                glm::vec2 intersection = lineIntersection(glm::vec2(-0.0001f, 0.0f), glm::vec2(800.0f, 0.0f),
-//                                                          glm::vec2(rotateTwo.x, rotateTwo.z), glm::vec2(rotateOne.x, rotateOne.z));
-//                rotateOne = glm::vec3(intersection.x, 0.0f, intersection.y);
-//            }
-//            if(rotateTwo.z < 0.0f)
-//            {
-
-//                glm::vec2 intersection = lineIntersection(glm::vec2(0.0f, 0.0f), glm::vec2(800.0f, 0.0f),
-//                                                          glm::vec2(rotateOne.x, rotateOne.z), glm::vec2(rotateTwo.x, rotateTwo.z));
-//                rotateTwo = glm::vec3(intersection.x, 0.0f, intersection.y);
-//            }
-
-//        }
-
-
-
-
-
-//                if(rotateOne.z > 0.0f || rotateTwo.z > 0.0f)
-//                {
-//                    currentWall = nextWall;
-//                    continue;
-//                }
-//                if(rotateOne.z < 0.0f || rotateTwo.z < 0.0f)
-//                {
-
-
-//                    if(rotateOne.z < 0.0f)
-//                    {
-//                        glm::vec2 intersection = lineIntersection(glm::vec2(-0.0001f, 0.0001f), glm::vec2(-20.0f, 5.0f),
-//                                                                  glm::vec2(rotateTwo.x, rotateTwo.z), glm::vec2(rotateOne.x, rotateOne.z));
-//                        rotateOne = glm::vec3(intersection.x, 0.0f, intersection.y);
-//                    }
-//                    if(rotateTwo.z < 0.0f)
-//                    {
-
-//                        glm::vec2 intersection = lineIntersection(glm::vec2(0.0f, 0.0f), glm::vec2(800.0f, 0.0f),
-//                                                                  glm::vec2(rotateOne.x, rotateOne.z), glm::vec2(rotateTwo.x, rotateTwo.z));
-//                        rotateTwo = glm::vec3(intersection.x, 0.0f, intersection.y);
-
-//                    }
-
-//                }
-        //        drawFilledSquare(glm::vec2(rotateOne.x, rotateOne.y-ceiling)/rotateOne.z*hfov+bias,
-        //                         glm::vec2(rotateTwo.x, rotateTwo.y-ceiling)/rotateTwo.z*hfov+bias,
-        //                         ceiling/rotateOne.z*hfov,ceiling/rotateTwo.z*hfov);
+        if(currentWall.nextSectorIndex == -1)
+            window.setColor(glm::vec3(1.0f));
+        else
+            window.setColor(glm::vec3(1.0f, 0.0f, 0.0f));
+        // Walls
+        drawFilledSquare(glm::vec2(-rotateOne.x*hfov/rotateOne.z, 50.0f/rotateOne.z*vfov)+bias,
+                         glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, 50.0f/rotateTwo.z*vfov)+bias,
+                         50.0f/rotateOne.z*vfov, 50.0f/rotateTwo.z*vfov);
+        // floor
+        window.setColor(glm::vec3(0.0f, 1.0f, 0.0f));
+        drawFilledSquare(glm::vec2(-rotateOne.x*hfov/rotateOne.z, 50.0f/rotateOne.z*vfov)+bias,
+                         glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, 50.0f/rotateTwo.z*vfov)+bias,
+                         -600.0f, -600.0f);
+        // Ceiling
+        window.setColor(glm::vec3(0.5f, 0.5f, 0.0f));
+        drawFilledSquare(glm::vec2(-rotateOne.x*hfov/rotateOne.z, -50.0f/rotateOne.z*vfov)+bias,
+                         glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, -50.0f/rotateTwo.z*vfov)+bias,
+                         600.0f, 600.0f);
+        window.setColor(glm::vec3(0.0f, 0.0f, 1.0f));
         window.line(glm::vec2(rotateOne.x, rotateOne.z)+bias, glm::vec2(rotateTwo.x, rotateTwo.z)+bias);
-        window.line(glm::vec2(-rotateOne.x*16.0f/rotateOne.z, -50.0f/rotateOne.z)+bias,
-                    glm::vec2(-rotateTwo.x*16.0f/rotateTwo.z, -50.0f/rotateTwo.z)+bias);
+        window.line(glm::vec2(-rotateOne.x*hfov/rotateOne.z, -50.0f/rotateOne.z*vfov)+bias,
+                    glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, -50.0f/rotateTwo.z*vfov)+bias);
+        window.line(glm::vec2(-rotateOne.x*hfov/rotateOne.z, 50.0f/rotateOne.z*vfov)+bias,
+                    glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, 50.0f/rotateTwo.z*vfov)+bias);
+
+        window.line(glm::vec2(-rotateOne.x*hfov/rotateOne.z, -50.0f/rotateOne.z*vfov)+bias,
+                    glm::vec2(-rotateOne.x*hfov/rotateOne.z, 50.0f/rotateOne.z*vfov)+bias);
+
+        window.line(glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, -50.0f/rotateTwo.z*vfov)+bias,
+                    glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, 50.0f/rotateTwo.z*vfov)+bias);
+
         currentWall = nextWall;
     }
 

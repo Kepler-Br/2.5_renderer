@@ -43,10 +43,15 @@ class RenderEngine
         {
             return one.y+(x-one.x)*(two.y-one.y)/(two.x-one.x);
         };
-        for(int i = glm::min(pointOne.x, pointTwo.x); i < glm::max(pointOne.x, pointTwo.x); i++)
+        float startValue = glm::min(pointOne.x, pointTwo.x);
+        float endValue = glm::max(pointOne.x, pointTwo.x);
+
+        for(float i = startValue; i < endValue; i++)
         {
+            if(i < 0.0f || i > 800.0f)
+                continue;
             float y = interpolation(pointOne, pointTwo, i);
-            window.vLine(glm::vec2(i, y), lerp(heightOne, heightTwo, i/pointTwo.x));
+            window.vLine(glm::vec2(i, y), lerp(-2*heightOne, -2*heightTwo, (i-startValue)/(endValue-startValue)));
         }
     }
 
@@ -63,7 +68,7 @@ public:
 
     void render()
     {
-        renderMap();
+//        renderMap();
 //        renderRotatedMap();
         render3D();
         //        drawFilledSquare(glm::vec2(0.0f, 100.0f), glm::vec2(100.0f, 100.0f), 10, 20);
