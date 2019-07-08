@@ -98,8 +98,9 @@ void PlayState::readMap(const std::string &path)
     mapFile.open(path);
     string line = "1";
     regex pstartRegex("^ *pstart +(-?\\d+\\.?\\d*) +(-?\\d+\\.?\\d*) +(-?\\d+\\.?\\d*) +(-?\\d+\\.?\\d*) +(\\d+) *$");
-    regex sectorRegex("^ *s +(\\d+) +(\\d+) +(-?\\d+\\.?\\d*) +(-?\\d+\\.?\\d*) *$");
-    regex wallRegex(" *w +(\\-?\\d+\\.?\\d*) +(\\-?\\d+\\.?\\d*) +(\\d+) +(\\-?\\d+) *");
+    regex sectorRegex("^ *s +(\\d+) +(\\d+) +(-?\\d+\\.?\\d*) +(-?\\d+\\.?\\d*) +(\\d+) +(\\d+) *$");
+    regex wallRegex(" *w +(\\-?\\d+\\.?\\d*) +(\\-?\\d+\\.?\\d*) +(\\d+) +(\\-?\\d+) +(\\d+) +(\\-?\\d+) +(\\-?\\d+) +(\\-?\\d+) +(\\-?\\d+) *");
+
 
     regex secnumRegex("^ *secnum +(\\d+) *$");
     regex wallnumRegex("^ *wallnum +(\\d+) *$");
@@ -115,6 +116,11 @@ void PlayState::readMap(const std::string &path)
             wall.point = glm::vec2(stof(m[1]), stof(m[2]));
             wall.nextWallIndex = stoi(m[3]);
             wall.nextSectorIndex = stoi(m[4]);
+            wall.textureIndex = stoi(m[5]);
+            wall.repeatX = stof(m[6]);
+            wall.repeatY = stof(m[7]);
+            wall.panningX = stof(m[8]);
+            wall.panningY = stof(m[9]);
             walls.push_back(wall);
             continue;
         }
@@ -126,6 +132,8 @@ void PlayState::readMap(const std::string &path)
             sector.numWalls = stoi(m[2]);
             sector.floor = stof(m[3]);
             sector.ceiling = stof(m[4]);
+            sector.ceilingTextureIndex = stoi(m[5]);
+            sector.floorTextureIndex = stoi(m[6]);
             sectors.push_back(sector);
             continue;
         }

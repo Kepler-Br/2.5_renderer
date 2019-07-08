@@ -21,6 +21,9 @@ struct Wall
     glm::vec2 point;
     int nextWallIndex;
     int nextSectorIndex;
+    int textureIndex;
+    float repeatX, repeatY;
+    float panningX, panningY;
 };
 
 struct Sector
@@ -28,6 +31,8 @@ struct Sector
     int startWall;
     int numWalls;
     float floor, ceiling;
+    int ceilingTextureIndex;
+    int floorTextureIndex;
 };
 
 struct Bunch
