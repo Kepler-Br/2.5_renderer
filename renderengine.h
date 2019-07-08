@@ -51,6 +51,7 @@ class RenderEngine
             if(i < 0.0f || i > 800.0f)
                 continue;
             float y = interpolation(pointOne, pointTwo, i);
+            y = glm::clamp(y, 0.0f, 600.0f);
             window.vLine(glm::vec2(i, y), lerp(-2*heightOne, -2*heightTwo, (i-startValue)/(endValue-startValue)));
         }
     }

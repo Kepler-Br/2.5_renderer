@@ -121,13 +121,13 @@ void xenfa::RenderEngine::render3D()
                          50.0f/rotateOne.z*vfov, 50.0f/rotateTwo.z*vfov);
         // floor
         window.setColor(glm::vec3(0.0f, 1.0f, 0.0f));
-        drawFilledSquare(glm::vec2(-rotateOne.x*hfov/rotateOne.z, 50.0f/rotateOne.z*vfov)+bias,
-                         glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, 50.0f/rotateTwo.z*vfov)+bias,
+        drawFilledSquare(glm::vec2(-rotateOne.x*hfov/rotateOne.z, -currentSector.floor/rotateOne.z*vfov)+bias,
+                         glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, -currentSector.floor/rotateTwo.z*vfov)+bias,
                          -600.0f, -600.0f);
         // Ceiling
         window.setColor(glm::vec3(0.5f, 0.5f, 0.0f));
-        drawFilledSquare(glm::vec2(-rotateOne.x*hfov/rotateOne.z, -50.0f/rotateOne.z*vfov)+bias,
-                         glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, -50.0f/rotateTwo.z*vfov)+bias,
+        drawFilledSquare(glm::vec2(-rotateOne.x*hfov/rotateOne.z, -currentSector.ceiling/rotateOne.z*vfov)+bias,
+                         glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, -currentSector.ceiling/rotateTwo.z*vfov)+bias,
                          600.0f, 600.0f);
         window.setColor(glm::vec3(0.0f, 0.0f, 1.0f));
         window.line(glm::vec2(rotateOne.x, rotateOne.z)+bias, glm::vec2(rotateTwo.x, rotateTwo.z)+bias);
