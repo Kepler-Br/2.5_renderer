@@ -13,7 +13,9 @@ struct Player
     float angle,
     angleSin,
     angleCos,
-    yaw;
+    yawSin,
+    yawCos,
+    yaw = 0.0f;
 };
 
 struct Wall

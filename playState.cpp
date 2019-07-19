@@ -1,6 +1,7 @@
 #include "playState.h"
 #include <iostream>
 #include <vector>
+#include <GL/gl.h>
 
 using namespace xenfa;
 
@@ -11,6 +12,7 @@ PlayState::PlayState(Application *app):
     renderEngine(walls, sectors, player, window)
 {
     readMap("map.txt");
+    renderEngine.init();
 }
 
 PlayState::~PlayState()
@@ -49,10 +51,14 @@ void PlayState::input()
         std::cout << "sector changed to " << player.lastSector << std::endl;
 
 
-    if(inputManager.isKeyDown(SDLK_a))
+    if(inputManager.isKeyDown(SDLK_RIGHT))
         player.angle -= M_PI/20.0f;
-    if(inputManager.isKeyDown(SDLK_d))
+    if(inputManager.isKeyDown(SDLK_LEFT))
         player.angle += M_PI/20.0f;
+    if(inputManager.isKeyDown(SDLK_UP))
+        player.yaw -= M_PI/20.0f;
+    if(inputManager.isKeyDown(SDLK_DOWN))
+        player.yaw += M_PI/20.0f;
 
 
 }
@@ -67,6 +73,8 @@ void PlayState::fixedUpdate()
     player.position = physicsEngine.levelCollision(player.position, player.position + player.velocity, player.lastSector);
     player.angleCos = cos(player.angle);
     player.angleSin = sin(player.angle);
+    player.yawCos = cos(player.yaw);
+    player.yawSin = sin(player.yaw);
 }
 
 void PlayState::lateUpdate()
@@ -76,8 +84,9 @@ void PlayState::lateUpdate()
 
 void PlayState::preRender()
 {
-    window.setColor(glm::vec3(0.0f));
+//    window.setColor(glm::vec3(0.0f));
     window.clear();
+
 }
 
 void PlayState::render()
@@ -87,7 +96,7 @@ void PlayState::render()
 
 void PlayState::postRender()
 {
-    window.rendererPresent();
+    window.swapBuffer();
 }
 
 void PlayState::readMap(const std::string &path)
