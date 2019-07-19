@@ -13,7 +13,9 @@ struct Player
     float angle,
     angleSin,
     angleCos,
-    yaw;
+    yawSin,
+    yawCos,
+    yaw = 0.0f;
 };
 
 struct Wall
@@ -21,6 +23,9 @@ struct Wall
     glm::vec2 point;
     int nextWallIndex;
     int nextSectorIndex;
+    int textureIndex;
+    float repeatX, repeatY;
+    float panningX, panningY;
 };
 
 struct Sector
@@ -28,6 +33,8 @@ struct Sector
     int startWall;
     int numWalls;
     float floor, ceiling;
+    int ceilingTextureIndex;
+    int floorTextureIndex;
 };
 
 struct Bunch
