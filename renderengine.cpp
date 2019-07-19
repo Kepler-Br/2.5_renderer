@@ -1,202 +1,398 @@
 #include "renderengine.h"
 
-void xenfa::RenderEngine::renderMap()
+std::vector<float> xenfa::RenderEngine::generatePortalVertices(uint wallIndex, uint sectorIndex)
 {
-    for(const auto &sector : sectors)
-    {
-        const glm::vec3 bias = glm::vec3(200.0f, 300.0f, 100.0f);
-        window.setColor(glm::vec3(1.0f));
-        window.square(player.position+bias-glm::vec3(3.0f), glm::vec2(6.0f));
-        constexpr float lookLength = 20.0f;
-        glm::vec2 playerSight = glm::normalize(player.position-glm::vec3(player.position.x + cos(player.angle)*lookLength,
-                                                                         player.position.y + sin(player.angle)*lookLength, 0.0f));
-        window.line(player.position+bias, glm::vec3(player.position.x + cos(player.angle)*lookLength, player.position.y + sin(player.angle)*lookLength, 0.0f)+bias);
+    const Wall &wall = walls[wallIndex];
+    const Wall &nextWall = walls[wall.nextWallIndex];
+    const Sector &sector = sectors[sectorIndex];
+    const Sector &nextSector = sectors[wall.nextSectorIndex];
+    std::vector<float> vertices;
 
-        const int &startWallIndex = sector.startWall;
-        const int &totalWalls = sector.numWalls;
-        const Wall startWall = walls[startWallIndex];
-        Wall currentWall = startWall;
-        for(int wallIndex = startWallIndex; wallIndex < startWallIndex+totalWalls; wallIndex++)
+    if(sector.ceiling - nextSector.ceiling > 0.0f)
+    {
+        vertices.push_back(wall.point.x);
+        vertices.push_back(wall.point.y);
+        vertices.push_back(sector.ceiling);
+
+        vertices.push_back(wall.point.x);
+        vertices.push_back(wall.point.y);
+        vertices.push_back(nextSector.ceiling);
+
+        vertices.push_back(nextWall.point.x);
+        vertices.push_back(nextWall.point.y);
+        vertices.push_back(nextSector.ceiling);
+
+
+        vertices.push_back(wall.point.x);
+        vertices.push_back(wall.point.y);
+        vertices.push_back(sector.ceiling);
+
+        vertices.push_back(nextWall.point.x);
+        vertices.push_back(nextWall.point.y);
+        vertices.push_back(nextSector.ceiling);
+
+        vertices.push_back(nextWall.point.x);
+        vertices.push_back(nextWall.point.y);
+        vertices.push_back(sector.ceiling);
+    }
+
+    if(sector.floor - nextSector.floor > 0.0f)
+    {
+        vertices.push_back(wall.point.x);
+        vertices.push_back(wall.point.y);
+        vertices.push_back(sector.floor);
+
+        vertices.push_back(wall.point.x);
+        vertices.push_back(wall.point.y);
+        vertices.push_back(nextSector.floor);
+
+        vertices.push_back(nextWall.point.x);
+        vertices.push_back(nextWall.point.y);
+        vertices.push_back(nextSector.floor);
+
+
+        vertices.push_back(wall.point.x);
+        vertices.push_back(wall.point.y);
+        vertices.push_back(sector.floor);
+
+        vertices.push_back(nextWall.point.x);
+        vertices.push_back(nextWall.point.y);
+        vertices.push_back(nextSector.floor);
+
+        vertices.push_back(nextWall.point.x);
+        vertices.push_back(nextWall.point.y);
+        vertices.push_back(sector.floor);
+    }
+
+
+    return vertices;
+}
+
+std::vector<float> xenfa::RenderEngine::generateWallVertices(int wallIndex, int sectorIndex)
+{
+    const Wall &wall = walls[wallIndex];
+    const Wall &nextWall = walls[wall.nextWallIndex];
+    const Sector &sector = sectors[sectorIndex];
+    std::vector<float> vertices;
+    constexpr uint numVerticleCoordinates = 3*6;
+    vertices.reserve(numVerticleCoordinates);
+
+    vertices.push_back(wall.point.x);
+    vertices.push_back(wall.point.y);
+    vertices.push_back(sector.floor);
+
+    vertices.push_back(nextWall.point.x);
+    vertices.push_back(nextWall.point.y);
+    vertices.push_back(sector.floor);
+
+    vertices.push_back(wall.point.x);
+    vertices.push_back(wall.point.y);
+    vertices.push_back(sector.ceiling);
+
+
+    vertices.push_back(nextWall.point.x);
+    vertices.push_back(nextWall.point.y);
+    vertices.push_back(sector.floor);
+
+    vertices.push_back(wall.point.x);
+    vertices.push_back(wall.point.y);
+    vertices.push_back(sector.ceiling);
+
+    vertices.push_back(nextWall.point.x);
+    vertices.push_back(nextWall.point.y);
+    vertices.push_back(sector.ceiling);
+
+
+    return vertices;
+}
+
+std::vector<float> xenfa::RenderEngine::generatePortalUV(uint wallIndex, uint sectorIndex)
+{
+    const Wall &wall = walls[wallIndex];
+    const Wall &nextWall = walls[wall.nextWallIndex];
+    const Sector &sector = sectors[sectorIndex];
+    const Sector &nextSector = sectors[wall.nextSectorIndex];
+    std::vector<float> UV;
+
+    if(sector.ceiling - nextSector.ceiling > 0.0f)
+    {
+        UV.push_back(-1.0f);
+        UV.push_back(-1.0f); // sector
+
+        UV.push_back(-1.0f);
+        UV.push_back(1.0f); // nextSector
+
+        UV.push_back(1.0f);
+        UV.push_back(1.0f); // nextSector
+
+
+        UV.push_back(-1.0f);
+        UV.push_back(-1.0f); // sector
+
+        UV.push_back(1.0f);
+        UV.push_back(1.0f); // nextSector
+
+        UV.push_back(1.0f);
+        UV.push_back(-1.0f); // sector
+    }
+
+    if(sector.floor - nextSector.floor > 0.0f)
+    {
+        UV.push_back(-1.0f);
+        UV.push_back(-1.0f);
+
+        UV.push_back(-1.0f);
+        UV.push_back(1.0f); // nextSector
+
+        UV.push_back(1.0f);
+        UV.push_back(1.0f); // nextSector
+
+
+        UV.push_back(-1.0f);
+        UV.push_back(-1.0f);
+
+        UV.push_back(1.0f);
+        UV.push_back(1.0f); // nextSector
+
+        UV.push_back(1.0f);
+        UV.push_back(-1.0f);
+    }
+
+    return UV;
+}
+
+std::vector<float> xenfa::RenderEngine::generateWallUV(int wallIndex, int sectorIndex)
+{
+    const Wall &wall = walls[wallIndex];
+    const Wall &nextWall = walls[wall.nextWallIndex];
+    const Sector &sector = sectors[sectorIndex];
+    std::vector<float> UV;
+    constexpr uint numUVCoordinates = 2*6;
+    UV.reserve(numUVCoordinates);
+
+    UV.push_back(-1.0f);
+    UV.push_back(-1.0f);
+
+    UV.push_back(1.0f);
+    UV.push_back(-1.0f);
+
+    UV.push_back(-1.0f);
+    UV.push_back(1.0f);
+
+
+    UV.push_back(1.0f);
+    UV.push_back(-1.0f);
+
+    UV.push_back(-1.0f);
+    UV.push_back(1.0f);
+
+    UV.push_back(1.0f);
+    UV.push_back(1.0f);
+
+
+
+    return UV;
+}
+
+std::vector<float> xenfa::RenderEngine::generateSectorVertices(uint sectorIndex, bool generateFloor)
+{
+    const Sector &sector = sectors[sectorIndex];
+
+    std::vector<float> vertices;
+    vertices.reserve(sector.numWalls);
+
+    Wall currentWall = walls[sector.startWall];
+    for(uint i = 0; i < sector.numWalls; i++)
+    {
+        vertices.push_back(currentWall.point.x);
+        vertices.push_back(currentWall.point.y);
+        if(generateFloor)
+            vertices.push_back(sector.floor);
+        else
+            vertices.push_back(sector.ceiling);
+        //        // Lazy way to triangulate. Don't try to understand.
+        //        //Works like translating GL_TRIANGLE_FAN into GL_TRIANGLE
+        //        if(i%2 == 0 && i != 0)
+        //        {
+        //            const uint size = vertices.size();
+        //            vertices.push_back(vertices[size]-2);
+        //            vertices.push_back(vertices[size]-1);
+        //        }
+        currentWall = walls[currentWall.nextWallIndex];
+    }
+    return vertices;
+}
+
+std::vector<float> xenfa::RenderEngine::generateSectorUV(uint sectorIndex)
+{
+    const Sector &sector = sectors[sectorIndex];
+
+    std::vector<float> UV;
+    UV.reserve(sector.numWalls);
+
+    Wall currentWall = walls[sector.startWall];
+    for(uint i = 0; i < sector.numWalls; i++)
+    {
+        UV.push_back(currentWall.point.x);
+        UV.push_back(currentWall.point.y);
+        currentWall = walls[currentWall.nextWallIndex];
+    }
+    return UV;
+}
+
+
+
+void xenfa::RenderEngine::setupVertexObjects(GLuint &Vao, GLuint &Vbo, GLuint &VboUV,
+                                             const std::vector<float> &vertices,
+                                             const std::vector<float> &UV)
+{
+    glGenVertexArrays(1, &Vao);
+    glBindVertexArray(Vao);
+    // VBO for vertices
+    {
+        // Generate 1 buffer, put the resulting identifier in Vbo
+        glGenBuffers(1, &Vbo);
+        // The following commands will talk about our 'Vbo' buffer
+        glBindBuffer(GL_ARRAY_BUFFER, Vbo);
+        // Give our vertices to OpenGL.
+        glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float), &vertices[0], GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, Vbo);
+        glVertexAttribPointer(
+                    0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+                    3,                  // size
+                    GL_FLOAT,           // type
+                    GL_FALSE,           // normalized?
+                    0,                  // stride
+                    (void*)0            // array buffer offset
+                    );
+    }
+    // VBO for UV
+    {
+        // Generate 1 buffer, put the resulting identifier in Vbo
+        glGenBuffers(1, &VboUV);
+        // The following commands will talk about our 'Vbo' buffer
+        glBindBuffer(GL_ARRAY_BUFFER, VboUV);
+        // Give our vertices to OpenGL.
+        glBufferData(GL_ARRAY_BUFFER, UV.size()*sizeof(float), &UV[0], GL_STATIC_DRAW);
+        glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, VboUV);
+        glVertexAttribPointer(
+                    1,                  // attribute 1.
+                    2,                  // size
+                    GL_FLOAT,           // type
+                    GL_FALSE,           // normalized?
+                    0,                  // stride
+                    (void*)0            // array buffer offset
+                    );
+    }
+    glBindVertexArray(0);
+}
+
+void xenfa::RenderEngine::generateWallsVertexBuffers()
+{
+    wallsGL.resize(walls.size());
+    for(uint sectorIndex = 0; sectorIndex < sectors.size(); sectorIndex++)
+    {
+        Sector currentSector = sectors[sectorIndex];
+        uint currentWallIndex = currentSector.startWall;
+        Wall currentWall = walls[currentWallIndex];
+        for(uint i = 0; i <= currentSector.numWalls; i++)
         {
-            const glm::vec2 &curPoint = currentWall.point + glm::vec2(bias);
-            const int nextPointIndex = currentWall.nextWallIndex;
-            const glm::vec2 &nextPoint = walls[nextPointIndex].point + glm::vec2(bias);
+            Wall nextWall = walls[currentWall.nextWallIndex];
+
+            std::vector<float> vertices;
+            std::vector<float> UV;
             if(currentWall.nextSectorIndex == -1)
-                window.setColor(glm::vec3(1.0f));
+            {
+                vertices = generateWallVertices(currentWallIndex, sectorIndex);
+                UV = generateWallUV(currentWallIndex, sectorIndex);
+            }
             else
-                window.setColor(glm::vec3(1.0f, 0.0f, 0.0f));
-            window.line(curPoint, nextPoint);
+            {
+                vertices = generatePortalVertices(currentWallIndex, sectorIndex);
+                UV = generatePortalUV(currentWallIndex, sectorIndex);
+            }
+            GLuint vertexbuffer;
+            GLuint uvBuffer;
+            GLuint vertexArrayID;
+            setupVertexObjects(vertexArrayID, vertexbuffer, uvBuffer,
+                               vertices, UV);
 
-            currentWall = walls[currentWall.nextWallIndex];
+            wallsGL[currentWallIndex].vertexArray = vertexArrayID;
+            wallsGL[currentWallIndex].vertexBuffer = vertexbuffer;
+            wallsGL[currentWallIndex].numVertices = vertices.size();
+            wallsGL[currentWallIndex].uvBuffer = uvBuffer;
+            currentWallIndex = currentWall.nextWallIndex;
+            currentWall = nextWall;
         }
+
     }
 }
-#include "inputManager.h"
 
-void xenfa::RenderEngine::render3D()
+void xenfa::RenderEngine::generateSectorVertexBuffers()
 {
-    window.setColor(glm::vec3(1.0f));
-    static glm::vec3 pointOne = glm::vec3(10.0f, 0.0f, 2.0f);
-    static glm::vec3 pointTwo = glm::vec3(300.0f, 0.0f, 4.0f);
-    constexpr float w = 800.0f;
-    constexpr float h = 600.0f;
-    constexpr float eyeHeigth = 6.0f;
-    constexpr float hfov = 0.73f*h;
-    constexpr float vfov = 0.2f*h;
-    constexpr float ceiling = 20.0f;
-
-    auto &input = *InputManager::getInstance();
-
-
-
-    glm::vec2 bias = glm::vec2(400.0f, 300.0f);
-    Sector currentSector = sectors[player.lastSector];
-    Wall currentWall = walls[currentSector.startWall];
-    for(int i = 0; i < currentSector.numWalls; i++)
+    sectorFloorsGL.resize(sectors.size());
+    sectorCeilingsGL.resize(sectors.size());
+    for(uint sectorIndex = 0; sectorIndex < sectors.size(); sectorIndex++)
     {
-        Wall nextWall = walls[currentWall.nextWallIndex];
+        std::vector<float> floorVertices = generateSectorVertices(sectorIndex, true);
+        std::vector<float> floorUV = generateSectorUV(sectorIndex);
 
-        glm::vec2 translateOne = currentWall.point - glm::vec2(player.position);
-        glm::vec2 translateTwo = nextWall.point - glm::vec2(player.position);
+        std::vector<float> ceilingVertices = generateSectorVertices(sectorIndex, false);
+        std::vector<float> ceilingUV = generateSectorUV(sectorIndex);
 
-        glm::vec3 rotateOne = glm::vec3(translateOne.x*player.angleSin-translateOne.y*player.angleCos,
-                                        0.0f,
-                                        translateOne.x*player.angleCos+translateOne.y*player.angleSin);
-        glm::vec3 rotateTwo = glm::vec3(translateTwo.x*player.angleSin-translateTwo.y*player.angleCos,
-                                        0.0f,
-                                        translateTwo.x*player.angleCos+translateTwo.y*player.angleSin);
+        GLuint vertexArrayID;
+        GLuint vertexbuffer;
+        GLuint uvBuffer;
 
-        window.square(bias, glm::vec2(6.0f));
-        window.line(glm::vec2(bias), glm::vec2(bias) + glm::vec2(0.0f, 20.0f));
-
-
-        if(rotateOne.z < 0.0f && rotateTwo.z < 0.0f)
-        {
-            currentWall = nextWall;
-            continue;
-        }
-
-        if(rotateOne.z > 0.0f || rotateTwo.z > 0.0f)
-        {
+        setupVertexObjects(vertexArrayID, vertexbuffer, uvBuffer, floorVertices, floorUV);
+        sectorFloorsGL[sectorIndex].vertexArray = vertexArrayID;
+        sectorFloorsGL[sectorIndex].vertexBuffer = vertexbuffer;
+        sectorFloorsGL[sectorIndex].uvBuffer = uvBuffer;
+        sectorFloorsGL[sectorIndex].numVertices = sectors[sectorIndex].numWalls;
 
 
+        setupVertexObjects(vertexArrayID, vertexbuffer, uvBuffer, ceilingVertices, ceilingUV);
+        sectorCeilingsGL[sectorIndex].vertexArray = vertexArrayID;
+        sectorCeilingsGL[sectorIndex].vertexBuffer = vertexbuffer;
+        sectorCeilingsGL[sectorIndex].uvBuffer = uvBuffer;
+        sectorCeilingsGL[sectorIndex].numVertices = sectors[sectorIndex].numWalls;
 
-                glm::vec2 intersection = lineIntersection(glm::vec2(-0.0001f, 0.0001f), glm::vec2(-20.0f, 5.0f),
-                                                          glm::vec2(rotateTwo.x, rotateTwo.z), glm::vec2(rotateOne.x, rotateOne.z));
-                glm::vec2 intersection2 = lineIntersection(glm::vec2(0.0001f, 0.0001f), glm::vec2(20.0f, 5.0f),
-                                                          glm::vec2(rotateOne.x, rotateOne.z), glm::vec2(rotateTwo.x, rotateTwo.z));
-                if(rotateOne.z <= 0)
-                {
-                    if(intersection.y > 0)
-                    {
-                        rotateOne = glm::vec3(intersection.x, 0.0f, intersection.y);
-                    }
-                    else
-                    {
-                        rotateOne = glm::vec3(intersection2.x, 0.0f, intersection2.y);
-                    }
-                }
-                if(rotateTwo.z <= 0)
-                {
-                    if(intersection.y > 0)
-                    {
-                        rotateTwo = glm::vec3(intersection.x, 0.0f, intersection.y);
-                    }
-                    else
-                    {
-                        rotateTwo = glm::vec3(intersection2.x, 0.0f, intersection2.y);
-                    }
-                }
-
-        }
-
-
-        if(currentWall.nextSectorIndex == -1)
-            window.setColor(glm::vec3(1.0f));
-        else
-            window.setColor(glm::vec3(1.0f, 0.0f, 0.0f));
-        // Walls
-        drawFilledSquare(glm::vec2(-rotateOne.x*hfov/rotateOne.z, 50.0f/rotateOne.z*vfov)+bias,
-                         glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, 50.0f/rotateTwo.z*vfov)+bias,
-                         50.0f/rotateOne.z*vfov, 50.0f/rotateTwo.z*vfov);
-        // floor
-        window.setColor(glm::vec3(0.0f, 1.0f, 0.0f));
-        drawFilledSquare(glm::vec2(-rotateOne.x*hfov/rotateOne.z, -currentSector.floor/rotateOne.z*vfov)+bias,
-                         glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, -currentSector.floor/rotateTwo.z*vfov)+bias,
-                         -600.0f, -600.0f);
-        // Ceiling
-        window.setColor(glm::vec3(0.5f, 0.5f, 0.0f));
-        drawFilledSquare(glm::vec2(-rotateOne.x*hfov/rotateOne.z, -currentSector.ceiling/rotateOne.z*vfov)+bias,
-                         glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, -currentSector.ceiling/rotateTwo.z*vfov)+bias,
-                         600.0f, 600.0f);
-        window.setColor(glm::vec3(0.0f, 0.0f, 1.0f));
-        window.line(glm::vec2(rotateOne.x, rotateOne.z)+bias, glm::vec2(rotateTwo.x, rotateTwo.z)+bias);
-        window.line(glm::vec2(-rotateOne.x*hfov/rotateOne.z, -50.0f/rotateOne.z*vfov)+bias,
-                    glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, -50.0f/rotateTwo.z*vfov)+bias);
-        window.line(glm::vec2(-rotateOne.x*hfov/rotateOne.z, 50.0f/rotateOne.z*vfov)+bias,
-                    glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, 50.0f/rotateTwo.z*vfov)+bias);
-
-        window.line(glm::vec2(-rotateOne.x*hfov/rotateOne.z, -50.0f/rotateOne.z*vfov)+bias,
-                    glm::vec2(-rotateOne.x*hfov/rotateOne.z, 50.0f/rotateOne.z*vfov)+bias);
-
-        window.line(glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, -50.0f/rotateTwo.z*vfov)+bias,
-                    glm::vec2(-rotateTwo.x*hfov/rotateTwo.z, 50.0f/rotateTwo.z*vfov)+bias);
-
-        currentWall = nextWall;
     }
-
 }
 
-void xenfa::RenderEngine::renderRotatedMap()
+
+void xenfa::RenderEngine::render()
 {
-    glm::vec2 bias = glm::vec2(300.0f, 300.0f);
-    Sector currentSector = sectors[player.lastSector];
-    Wall currentWall = walls[currentSector.startWall];
-    for(int i = 0; i < currentSector.numWalls; i++)
+    camera.lookAt(player.position, glm::vec3(player.angleCos*player.yawSin,
+                                             player.angleSin*player.yawSin,
+                                             player.yawCos)+player.position, glm::vec3(0.0f, 0.0f, 1.0f));
+    camera.update();
+    shader.use();
+    GLuint MatrixID = glGetUniformLocation(shader.shaderProgram, "VP");
+    GLuint textureID = glGetUniformLocation(shader.shaderProgram, "tex");
+    glm::mat4 MVP = camera.getVP();
+    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+    glUniform1i(textureID, texture);
+
+    //     1st attribute buffer : vertices
+    for(int i = 0; i < wallsGL.size(); i++)
     {
-        Wall nextWall = walls[currentWall.nextWallIndex];
-
-        glm::vec2 translateOne = currentWall.point - glm::vec2(player.position);
-        glm::vec2 translateTwo = nextWall.point - glm::vec2(player.position);
-
-        glm::vec3 rotateOne = glm::vec3(translateOne.x*player.angleSin-translateOne.y*player.angleCos,
-                                        0.0f,
-                                        translateOne.x*player.angleCos+translateOne.y*player.angleSin);
-        glm::vec3 rotateTwo = glm::vec3(translateTwo.x*player.angleSin-translateTwo.y*player.angleCos,
-                                        0.0f,
-                                        translateTwo.x*player.angleCos+translateTwo.y*player.angleSin);
-
-        window.square(bias, glm::vec2(6.0f));
-        window.line(glm::vec2(bias), glm::vec2(bias) + glm::vec2(0.0f, 20.0f));
-
-        if(rotateOne.z < 0.0f && rotateTwo.z < 0.0f)
-        {
-            currentWall = nextWall;
-            continue;
-        }
-        if(rotateOne.z < 0.0f || rotateTwo.z < 0.0f)
-        {
-
-
-            if(rotateOne.z < 0.0f)
-            {
-                glm::vec2 intersection = lineIntersection(glm::vec2(0.0f, 0.0f), glm::vec2(800.0f, 0.0f),
-                                                          glm::vec2(rotateTwo.x, rotateTwo.z), glm::vec2(rotateOne.x, rotateOne.z));
-                window.line(intersection+bias, glm::vec2(rotateTwo.x, rotateTwo.z)+bias);
-            }
-            if(rotateTwo.z < 0.0f)
-            {
-
-                glm::vec2 intersection = lineIntersection(glm::vec2(0.0f, 0.0f), glm::vec2(800.0f, 0.0f),
-                                                          glm::vec2(rotateOne.x, rotateOne.z), glm::vec2(rotateTwo.x, rotateTwo.z));
-                window.line(intersection+bias, glm::vec2(rotateOne.x, rotateOne.z)+bias);
-            }
-
-        }
-        else
-        {
-            window.line(glm::vec2(rotateOne.x, rotateOne.z)+bias, glm::vec2(rotateTwo.x, rotateTwo.z)+bias);
-        }
-        currentWall = nextWall;
+        const WallGL &wallGL = wallsGL[i];
+        glBindVertexArray(wallGL.vertexArray);
+        glDrawArrays(GL_TRIANGLES, 0, wallGL.numVertices);
     }
+    for(const SectorGL &sectorFloor : sectorFloorsGL)
+    {
+        glBindVertexArray(sectorFloor.vertexArray);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, sectorFloor.numVertices);
+    }
+    for(const auto &sectorCeiling : sectorCeilingsGL)
+    {
+        glBindVertexArray(sectorCeiling.vertexArray);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, sectorCeiling.numVertices);
+    }
+    //    glDisableVertexAttribArray(0);
 }
