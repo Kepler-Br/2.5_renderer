@@ -116,46 +116,46 @@ std::vector<float> xenfa::RenderEngine::generatePortalUV(uint wallIndex, uint se
 
     if(sector.ceiling - nextSector.ceiling > 0.0f)
     {
-        UV.push_back(-1.0f);
-        UV.push_back(-1.0f); // sector
+        UV.push_back(0.0f);
+        UV.push_back(0.0f); // sector
 
-        UV.push_back(-1.0f);
+        UV.push_back(0.0f);
         UV.push_back(1.0f); // nextSector
 
         UV.push_back(1.0f);
         UV.push_back(1.0f); // nextSector
 
 
-        UV.push_back(-1.0f);
-        UV.push_back(-1.0f); // sector
+        UV.push_back(0.0f);
+        UV.push_back(0.0f); // sector
 
         UV.push_back(1.0f);
         UV.push_back(1.0f); // nextSector
 
         UV.push_back(1.0f);
-        UV.push_back(-1.0f); // sector
+        UV.push_back(0.0f); // sector
     }
 
     if(sector.floor - nextSector.floor > 0.0f)
     {
-        UV.push_back(-1.0f);
-        UV.push_back(-1.0f);
+        UV.push_back(0.0f);
+        UV.push_back(0.0f);
 
-        UV.push_back(-1.0f);
+        UV.push_back(0.0f);
         UV.push_back(1.0f); // nextSector
 
         UV.push_back(1.0f);
         UV.push_back(1.0f); // nextSector
 
 
-        UV.push_back(-1.0f);
-        UV.push_back(-1.0f);
+        UV.push_back(0.0f);
+        UV.push_back(0.0f);
 
         UV.push_back(1.0f);
         UV.push_back(1.0f); // nextSector
 
         UV.push_back(1.0f);
-        UV.push_back(-1.0f);
+        UV.push_back(0.0f);
     }
 
     return UV;
@@ -170,27 +170,24 @@ std::vector<float> xenfa::RenderEngine::generateWallUV(int wallIndex, int sector
     constexpr uint numUVCoordinates = 2*6;
     UV.reserve(numUVCoordinates);
 
-    UV.push_back(-1.0f);
-    UV.push_back(-1.0f);
+    UV.push_back(0.0f);
+    UV.push_back(0.0f);
 
     UV.push_back(1.0f);
-    UV.push_back(-1.0f);
+    UV.push_back(0.0f);
 
-    UV.push_back(-1.0f);
-    UV.push_back(1.0f);
-
-
-    UV.push_back(1.0f);
-    UV.push_back(-1.0f);
-
-    UV.push_back(-1.0f);
-    UV.push_back(1.0f);
-
-    UV.push_back(1.0f);
+    UV.push_back(0.0f);
     UV.push_back(1.0f);
 
 
+    UV.push_back(1.0f);
+    UV.push_back(0.0f);
 
+    UV.push_back(0.0f);
+    UV.push_back(1.0f);
+
+    UV.push_back(1.0f);
+    UV.push_back(1.0f);
     return UV;
 }
 
@@ -231,11 +228,31 @@ std::vector<float> xenfa::RenderEngine::generateSectorUV(uint sectorIndex)
     UV.reserve(sector.numWalls);
 
     Wall currentWall = walls[sector.startWall];
+    float xMax = -INFINITY;
+    float yMax = -INFINITY;
+    float xMin = INFINITY;
+    float yMin = INFINITY;
     for(uint i = 0; i < sector.numWalls; i++)
     {
+        if(xMax < currentWall.point.x)
+            xMax = currentWall.point.x;
+        if(yMax < currentWall.point.y)
+            yMax = currentWall.point.y;
+        if(xMin > currentWall.point.x)
+            xMin = currentWall.point.x;
+        if(yMin > currentWall.point.y)
+            yMin = currentWall.point.y;
         UV.push_back(currentWall.point.x);
         UV.push_back(currentWall.point.y);
         currentWall = walls[currentWall.nextWallIndex];
+    }
+
+    float kX = 1.0f/(xMax-xMin);
+    float kY = 1.0f/(yMax-yMin);
+    for(uint i = 0; i < UV.size()-1; i+=2)
+    {
+        UV[i] = (UV[i]-xMin)*kX;
+        UV[i+1] = (UV[i+1]-yMin)*kY;
     }
     return UV;
 }
@@ -291,7 +308,7 @@ void xenfa::RenderEngine::setupVertexObjects(GLuint &Vao, GLuint &Vbo, GLuint &V
 
 void xenfa::RenderEngine::generateWallsVertexBuffers()
 {
-    wallsGL.resize(walls.size());
+    wallMeshes.resize(walls.size());
     for(uint sectorIndex = 0; sectorIndex < sectors.size(); sectorIndex++)
     {
         Sector currentSector = sectors[sectorIndex];
@@ -319,10 +336,10 @@ void xenfa::RenderEngine::generateWallsVertexBuffers()
             setupVertexObjects(vertexArrayID, vertexbuffer, uvBuffer,
                                vertices, UV);
 
-            wallsGL[currentWallIndex].vertexArray = vertexArrayID;
-            wallsGL[currentWallIndex].vertexBuffer = vertexbuffer;
-            wallsGL[currentWallIndex].numVertices = vertices.size();
-            wallsGL[currentWallIndex].uvBuffer = uvBuffer;
+            wallMeshes[currentWallIndex].vertexArray = vertexArrayID;
+            wallMeshes[currentWallIndex].vertexBuffer = vertexbuffer;
+            wallMeshes[currentWallIndex].numVertices = vertices.size();
+            wallMeshes[currentWallIndex].uvBuffer = uvBuffer;
             currentWallIndex = currentWall.nextWallIndex;
             currentWall = nextWall;
         }
@@ -332,8 +349,8 @@ void xenfa::RenderEngine::generateWallsVertexBuffers()
 
 void xenfa::RenderEngine::generateSectorVertexBuffers()
 {
-    sectorFloorsGL.resize(sectors.size());
-    sectorCeilingsGL.resize(sectors.size());
+    floorMeshes.resize(sectors.size());
+    ceilingMeshes.resize(sectors.size());
     for(uint sectorIndex = 0; sectorIndex < sectors.size(); sectorIndex++)
     {
         std::vector<float> floorVertices = generateSectorVertices(sectorIndex, true);
@@ -347,50 +364,61 @@ void xenfa::RenderEngine::generateSectorVertexBuffers()
         GLuint uvBuffer;
 
         setupVertexObjects(vertexArrayID, vertexbuffer, uvBuffer, floorVertices, floorUV);
-        sectorFloorsGL[sectorIndex].vertexArray = vertexArrayID;
-        sectorFloorsGL[sectorIndex].vertexBuffer = vertexbuffer;
-        sectorFloorsGL[sectorIndex].uvBuffer = uvBuffer;
-        sectorFloorsGL[sectorIndex].numVertices = sectors[sectorIndex].numWalls;
+        floorMeshes[sectorIndex].vertexArray = vertexArrayID;
+        floorMeshes[sectorIndex].vertexBuffer = vertexbuffer;
+        floorMeshes[sectorIndex].uvBuffer = uvBuffer;
+        floorMeshes[sectorIndex].numVertices = sectors[sectorIndex].numWalls;
 
 
         setupVertexObjects(vertexArrayID, vertexbuffer, uvBuffer, ceilingVertices, ceilingUV);
-        sectorCeilingsGL[sectorIndex].vertexArray = vertexArrayID;
-        sectorCeilingsGL[sectorIndex].vertexBuffer = vertexbuffer;
-        sectorCeilingsGL[sectorIndex].uvBuffer = uvBuffer;
-        sectorCeilingsGL[sectorIndex].numVertices = sectors[sectorIndex].numWalls;
+        ceilingMeshes[sectorIndex].vertexArray = vertexArrayID;
+        ceilingMeshes[sectorIndex].vertexBuffer = vertexbuffer;
+        ceilingMeshes[sectorIndex].uvBuffer = uvBuffer;
+        ceilingMeshes[sectorIndex].numVertices = sectors[sectorIndex].numWalls;
 
     }
 }
-
 
 void xenfa::RenderEngine::render()
 {
     camera.lookAt(player.position, glm::vec3(player.angleCos*player.yawSin,
                                              player.angleSin*player.yawSin,
-                                             player.yawCos)+player.position, glm::vec3(0.0f, 0.0f, 1.0f));
+                                             player.yawCos)+player.position, glm::vec3(0.0f, 0.0f, -1.0f));
     camera.update();
     shader.use();
     GLuint MatrixID = glGetUniformLocation(shader.shaderProgram, "VP");
-    GLuint textureID = glGetUniformLocation(shader.shaderProgram, "tex");
+//    GLuint textureID = glGetUniformLocation(shader.shaderProgram, "tex");
     glm::mat4 MVP = camera.getVP();
     glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
-    glUniform1i(textureID, texture);
+//    glUniform1i(textureID, texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
 
     //     1st attribute buffer : vertices
-    for(int i = 0; i < wallsGL.size(); i++)
+    for(int i = 0; i < wallMeshes.size(); i++)
     {
-        const WallGL &wallGL = wallsGL[i];
+        const MeshGL &wallGL = wallMeshes[i];
+        const Wall &wall = walls[i];
+        GLuint textureIndex = textureContainer.getTexture(wall.textureIndex);
+        glBindTexture(GL_TEXTURE_2D, textureIndex);
         glBindVertexArray(wallGL.vertexArray);
         glDrawArrays(GL_TRIANGLES, 0, wallGL.numVertices);
     }
-    for(const SectorGL &sectorFloor : sectorFloorsGL)
+    for(uint i = 0; i < floorMeshes.size(); i++)
     {
+        const MeshGL &sectorFloor = floorMeshes[i];
+        const Sector &sector = sectors[i];
+        GLuint textureIndex = textureContainer.getTexture(sector.floorTextureIndex);
+        glBindTexture(GL_TEXTURE_2D, textureIndex);
         glBindVertexArray(sectorFloor.vertexArray);
         glDrawArrays(GL_TRIANGLE_FAN, 0, sectorFloor.numVertices);
     }
-    for(const auto &sectorCeiling : sectorCeilingsGL)
+    for(uint i = 0; i < ceilingMeshes.size(); i++)
     {
+        const MeshGL &sectorCeiling = ceilingMeshes[i];
+        const Sector &sector = sectors[i];
+        GLuint textureIndex = textureContainer.getTexture(sector.ceilingTextureIndex);
+        glBindTexture(GL_TEXTURE_2D, textureIndex);
         glBindVertexArray(sectorCeiling.vertexArray);
         glDrawArrays(GL_TRIANGLE_FAN, 0, sectorCeiling.numVertices);
     }

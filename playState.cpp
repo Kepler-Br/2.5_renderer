@@ -12,7 +12,7 @@ PlayState::PlayState(Application *app):
     renderEngine(walls, sectors, player, window)
 {
     readMap("map.txt");
-    renderEngine.init();
+    renderEngine.init(texturePaths);
 }
 
 PlayState::~PlayState()
@@ -29,14 +29,14 @@ void PlayState::input()
 
     constexpr float playerSpeed = 5.0f;
     glm::vec3 playerMovement(0.0f);
-    if(inputManager.isKeyDown(SDLK_w))
+    if(inputManager.isKeyDown(SDLK_s))
     {
         glm::vec3 newPlayerPosition = glm::vec3(cos(player.angle),
                                                 sin(player.angle),
                                                 0.0f);
         playerMovement = newPlayerPosition;
     }
-    if(inputManager.isKeyDown(SDLK_s))
+    if(inputManager.isKeyDown(SDLK_w))
     {
         glm::vec3 newPlayerPosition = glm::vec3(- cos(player.angle),
                                                 - sin(player.angle),
@@ -49,11 +49,13 @@ void PlayState::input()
     player.lastSector = physicsEngine.checkObjectSector(player.position, player.lastSector);
     if(lastSector != player.lastSector)
         std::cout << "sector changed to " << player.lastSector << std::endl;
+    constexpr float playerHeight = 30.0f;
+    player.position.z = sectors[player.lastSector].floor-playerHeight;
 
 
-    if(inputManager.isKeyDown(SDLK_RIGHT))
-        player.angle -= M_PI/20.0f;
     if(inputManager.isKeyDown(SDLK_LEFT))
+        player.angle -= M_PI/20.0f;
+    if(inputManager.isKeyDown(SDLK_RIGHT))
         player.angle += M_PI/20.0f;
     if(inputManager.isKeyDown(SDLK_UP))
         player.yaw -= M_PI/20.0f;
@@ -108,6 +110,7 @@ void PlayState::readMap(const std::string &path)
     string line = "1";
     regex pstartRegex("^ *pstart +(-?\\d+\\.?\\d*) +(-?\\d+\\.?\\d*) +(-?\\d+\\.?\\d*) +(-?\\d+\\.?\\d*) +(\\d+) *$");
     regex sectorRegex("^ *s +(\\d+) +(\\d+) +(-?\\d+\\.?\\d*) +(-?\\d+\\.?\\d*) +(\\d+) +(\\d+) *$");
+    regex textureRegex("^ *t +(\\d+) +([\\w \\\\/\\.]+) *$");
     regex wallRegex(" *w +(\\-?\\d+\\.?\\d*) +(\\-?\\d+\\.?\\d*) +(\\d+) +(\\-?\\d+) +(\\d+) +(\\-?\\d+) +(\\-?\\d+) +(\\-?\\d+) +(\\-?\\d+) *");
 
 
@@ -119,6 +122,13 @@ void PlayState::readMap(const std::string &path)
         std::cmatch m;
         if(mapFile.eof())
             break;
+        if(regex_match(line.c_str(), m, textureRegex))
+        {
+            uint textureIndex = stoi(m[1]);
+            std::string texturePath = m[2];
+            texturePaths.push_back(std::make_pair(textureIndex, texturePath));
+            continue;
+        }
         if(regex_match(line.c_str(), m, wallRegex))
         {
             Wall wall;

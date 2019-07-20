@@ -13,6 +13,7 @@ SOURCES += \
         playState.cpp \
         renderengine.cpp \
         shader.cpp \
+        texturecontainer.cpp \
         window.cpp
 
 HEADERS += \
@@ -26,6 +27,7 @@ HEADERS += \
     playState.h \
     renderengine.h \
     shader.h \
+    texturecontainer.h \
     types.h \
     window.h
 
