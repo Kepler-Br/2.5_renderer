@@ -10,21 +10,14 @@
 #include "camera.h"
 
 #include "shader.h"
+#include "texturecontainer.h"
 
 namespace xenfa
 {
 class RenderEngine
 {
 
-    struct WallGL
-    {
-        GLuint vertexArray;
-        GLuint vertexBuffer;
-        GLuint numVertices;
-        GLuint uvBuffer;
-    };
-
-    struct SectorGL
+    struct MeshGL
     {
         GLuint vertexArray;
         GLuint vertexBuffer;
@@ -33,9 +26,10 @@ class RenderEngine
     };
 
 
-    std::vector<WallGL> wallsGL;
-    std::vector<SectorGL> sectorCeilingsGL;
-    std::vector<SectorGL> sectorFloorsGL;
+    std::vector<MeshGL> wallMeshes;
+    std::vector<MeshGL> ceilingMeshes;
+    std::vector<MeshGL> floorMeshes;
+    TextureContainer textureContainer;
 
     std::vector<Wall> &walls;
     std::vector<Sector> &sectors;
@@ -89,47 +83,20 @@ public:
 
     }
     GLuint texture;
-    void init()
+    void init(const std::vector<std::pair<uint, std::string>> &texturePaths)
     {
         camera.lookAt(glm::vec3(40.0f, 3.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         camera.projectionPerspective(M_PI/2.0, 800.0f/600.0f, 0.001f, 200.0f);
         generateWallsVertexBuffers();
         generateSectorVertexBuffers();
         shader.init("vert.glsl", "frag.glsl");
-        texture = loadGLTextures("wall.bmp");
-
-    }
-    GLuint loadGLTextures(const std::string &path)
-    {
-        glActiveTexture(GL_TEXTURE0);
-        GLuint texture;
-        SDL_Surface* textureImage;
-        textureImage = SDL_LoadBMP(path.c_str());
-        if(!textureImage)
+        for(const auto &texturePath: texturePaths)
         {
-            throw std::runtime_error("Error loading texture");
+            uint index;
+            std::string path;
+            std::tie(index, path) = texturePath;
+            textureContainer.loadTexture(index, path);
         }
-
-        //Create the texture.
-        glGenTextures(1 , &texture);
-
-        //Typical texture generation using data from the bitmap.
-        glBindTexture(GL_TEXTURE_2D , texture);
-
-        //Generate the texture.
-        glTexImage2D(GL_TEXTURE_2D , 0 , 3 , textureImage->w ,
-                     textureImage->h , 0 , GL_RGB , GL_UNSIGNED_BYTE ,
-                     textureImage->pixels);
-
-        //Linear filtering.
-        glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MIN_FILTER , GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MAG_FILTER , GL_LINEAR);
-
-        //Free up the memory.
-        if(textureImage)
-            SDL_FreeSurface(textureImage);
-
-        return texture;
 
     }
 
