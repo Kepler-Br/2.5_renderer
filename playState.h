@@ -19,6 +19,7 @@ class PlayState: public iGameState
 
     std::vector<Wall> walls;
     std::vector<Sector> sectors;
+    std::vector<std::pair<uint, std::string>> texturePaths;
 
     InputManager &inputManager;
     PhysicsEngine physicsEngine;
