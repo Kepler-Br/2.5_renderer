@@ -1,6 +1,7 @@
 #include "playState.h"
 #include <iostream>
 #include <vector>
+#include <GL/gl.h>
 
 using namespace xenfa;
 
@@ -11,6 +12,7 @@ PlayState::PlayState(Application *app):
     renderEngine(walls, sectors, player, window)
 {
     readMap("map.txt");
+    renderEngine.init(texturePaths);
 }
 
 PlayState::~PlayState()
@@ -27,14 +29,14 @@ void PlayState::input()
 
     constexpr float playerSpeed = 5.0f;
     glm::vec3 playerMovement(0.0f);
-    if(inputManager.isKeyDown(SDLK_w))
+    if(inputManager.isKeyDown(SDLK_s))
     {
         glm::vec3 newPlayerPosition = glm::vec3(cos(player.angle),
                                                 sin(player.angle),
                                                 0.0f);
         playerMovement = newPlayerPosition;
     }
-    if(inputManager.isKeyDown(SDLK_s))
+    if(inputManager.isKeyDown(SDLK_w))
     {
         glm::vec3 newPlayerPosition = glm::vec3(- cos(player.angle),
                                                 - sin(player.angle),
@@ -47,12 +49,18 @@ void PlayState::input()
     player.lastSector = physicsEngine.checkObjectSector(player.position, player.lastSector);
     if(lastSector != player.lastSector)
         std::cout << "sector changed to " << player.lastSector << std::endl;
+    constexpr float playerHeight = 30.0f;
+    player.position.z = sectors[player.lastSector].floor-playerHeight;
 
 
-    if(inputManager.isKeyDown(SDLK_a))
+    if(inputManager.isKeyDown(SDLK_LEFT))
         player.angle -= M_PI/20.0f;
-    if(inputManager.isKeyDown(SDLK_d))
+    if(inputManager.isKeyDown(SDLK_RIGHT))
         player.angle += M_PI/20.0f;
+    if(inputManager.isKeyDown(SDLK_UP))
+        player.yaw -= M_PI/20.0f;
+    if(inputManager.isKeyDown(SDLK_DOWN))
+        player.yaw += M_PI/20.0f;
 
 
 }
@@ -67,6 +75,8 @@ void PlayState::fixedUpdate()
     player.position = physicsEngine.levelCollision(player.position, player.position + player.velocity, player.lastSector);
     player.angleCos = cos(player.angle);
     player.angleSin = sin(player.angle);
+    player.yawCos = cos(player.yaw);
+    player.yawSin = sin(player.yaw);
 }
 
 void PlayState::lateUpdate()
@@ -76,8 +86,9 @@ void PlayState::lateUpdate()
 
 void PlayState::preRender()
 {
-    window.setColor(glm::vec3(0.0f));
+//    window.setColor(glm::vec3(0.0f));
     window.clear();
+
 }
 
 void PlayState::render()
@@ -87,7 +98,7 @@ void PlayState::render()
 
 void PlayState::postRender()
 {
-    window.rendererPresent();
+    window.swapBuffer();
 }
 
 void PlayState::readMap(const std::string &path)
@@ -98,8 +109,10 @@ void PlayState::readMap(const std::string &path)
     mapFile.open(path);
     string line = "1";
     regex pstartRegex("^ *pstart +(-?\\d+\\.?\\d*) +(-?\\d+\\.?\\d*) +(-?\\d+\\.?\\d*) +(-?\\d+\\.?\\d*) +(\\d+) *$");
-    regex sectorRegex("^ *s +(\\d+) +(\\d+) +(-?\\d+\\.?\\d*) +(-?\\d+\\.?\\d*) *$");
-    regex wallRegex(" *w +(\\-?\\d+\\.?\\d*) +(\\-?\\d+\\.?\\d*) +(\\d+) +(\\-?\\d+) *");
+    regex sectorRegex("^ *s +(\\d+) +(\\d+) +(-?\\d+\\.?\\d*) +(-?\\d+\\.?\\d*) +(\\d+) +(\\d+) *$");
+    regex textureRegex("^ *t +(\\d+) +([\\w \\\\/\\.]+) *$");
+    regex wallRegex(" *w +(\\-?\\d+\\.?\\d*) +(\\-?\\d+\\.?\\d*) +(\\d+) +(\\-?\\d+) +(\\d+) +(\\-?\\d+) +(\\-?\\d+) +(\\-?\\d+) +(\\-?\\d+) *");
+
 
     regex secnumRegex("^ *secnum +(\\d+) *$");
     regex wallnumRegex("^ *wallnum +(\\d+) *$");
@@ -109,12 +122,24 @@ void PlayState::readMap(const std::string &path)
         std::cmatch m;
         if(mapFile.eof())
             break;
+        if(regex_match(line.c_str(), m, textureRegex))
+        {
+            uint textureIndex = stoi(m[1]);
+            std::string texturePath = m[2];
+            texturePaths.push_back(std::make_pair(textureIndex, texturePath));
+            continue;
+        }
         if(regex_match(line.c_str(), m, wallRegex))
         {
             Wall wall;
             wall.point = glm::vec2(stof(m[1]), stof(m[2]));
             wall.nextWallIndex = stoi(m[3]);
             wall.nextSectorIndex = stoi(m[4]);
+            wall.textureIndex = stoi(m[5]);
+            wall.repeatX = stof(m[6]);
+            wall.repeatY = stof(m[7]);
+            wall.panningX = stof(m[8]);
+            wall.panningY = stof(m[9]);
             walls.push_back(wall);
             continue;
         }
@@ -126,6 +151,8 @@ void PlayState::readMap(const std::string &path)
             sector.numWalls = stoi(m[2]);
             sector.floor = stof(m[3]);
             sector.ceiling = stof(m[4]);
+            sector.ceilingTextureIndex = stoi(m[5]);
+            sector.floorTextureIndex = stoi(m[6]);
             sectors.push_back(sector);
             continue;
         }
