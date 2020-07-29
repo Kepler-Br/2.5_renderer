@@ -3,26 +3,9 @@ CONFIG += console c++14
 CONFIG -= app_bundle
 CONFIG -= qt
 
-SOURCES += \
-        application.cpp \
-        checkTimer.cpp \
-        inputManager.cpp \
-        main.cpp \
-        physicsengine.cpp \
-        playState.cpp \
-        renderengine.cpp \
-        window.cpp
+SOURCES += *.cpp
 
-HEADERS += \
-    application.h \
-    checkTimer.h \
-    iGameState.h \
-    iStateManager.h \
-    inputManager.h \
-    physicsengine.h \
-    playState.h \
-    renderengine.h \
-    types.h \
-    window.h
+HEADERS += *.h \
+    game_object.h
 
 LIBS += -lSDL2

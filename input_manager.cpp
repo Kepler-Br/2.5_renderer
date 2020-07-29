@@ -1,9 +1,7 @@
-#include "inputManager.h"
+#include "input_manager.h"
 #include <iostream>
 
-InputManager InputManager::instance;
-
-bool InputManager::wasKeyDown(uint keyID)
+bool Input_manager::wasKeyDown(uint keyID)
 {
     auto it = prevKeyMap.find(keyID);
     if (it != prevKeyMap.end())
@@ -15,12 +13,12 @@ bool InputManager::wasKeyDown(uint keyID)
     return false;
 }
 
-void InputManager::pressEvent(uint eventID)
+void Input_manager::pressEvent(uint eventID)
 {
     events[eventID] = true;
 }
 
-void InputManager::updateState()
+void Input_manager::updateState()
 {
     SDL_Event event;
     while (SDL_PollEvent(&event))
@@ -46,7 +44,7 @@ void InputManager::updateState()
     }
 }
 
-void InputManager::update()
+void Input_manager::update()
 {
     SDL_GetRelativeMouseState(&deltaMouseCoord.x, &deltaMouseCoord.y);
     //    for(auto it:keyMap)
@@ -57,34 +55,34 @@ void InputManager::update()
     updateState();
 }
 
-void InputManager::pressKey(uint keyID)
+void Input_manager::pressKey(uint keyID)
 {
     keyMap[keyID] = true;
 }
 
-void InputManager::releaseKey(uint keyID)
+void Input_manager::releaseKey(uint keyID)
 {
     keyMap[keyID] = false;
 }
 
-glm::ivec2 InputManager::getDeltaMouseCoord()
+glm::ivec2 Input_manager::getDeltaMouseCoord()
 {
     return deltaMouseCoord;
 }
 
-glm::ivec2 InputManager::getRelativeMouseCoord()
+glm::ivec2 Input_manager::getRelativeMouseCoord()
 {
     SDL_GetMouseState(&relativeMouseCoord.x, &relativeMouseCoord.y);
     return relativeMouseCoord;
 }
 
-glm::ivec2 InputManager::getGlobalMouseCoord()
+glm::ivec2 Input_manager::getGlobalMouseCoord()
 {
     SDL_GetGlobalMouseState(&globalMouseCoord.x, &globalMouseCoord.y);
     return globalMouseCoord;
 }
 
-bool InputManager::isKeyDown(uint keyID)
+bool Input_manager::isKeyDown(uint keyID)
 {
     auto it = keyMap.find(keyID);
     if (it != keyMap.end())
@@ -96,7 +94,7 @@ bool InputManager::isKeyDown(uint keyID)
     return false;
 }
 
-bool InputManager::isKeyReleased(uint keyID)
+bool Input_manager::isKeyReleased(uint keyID)
 {
     if (wasKeyDown(keyID) == true && isKeyDown(keyID) == false)
     {
@@ -105,7 +103,7 @@ bool InputManager::isKeyReleased(uint keyID)
     return false;
 }
 
-bool InputManager::isKeyPressed(uint keyID)
+bool Input_manager::isKeyPressed(uint keyID)
 {
     if (wasKeyDown(keyID) == false && isKeyDown(keyID) == true)
     {
@@ -114,7 +112,7 @@ bool InputManager::isKeyPressed(uint keyID)
     return false;
 }
 
-bool InputManager::isEventPending(uint eventID)
+bool Input_manager::isEventPending(uint eventID)
 {
     auto it = events.find(eventID);
     if (it != events.end())
@@ -124,9 +122,4 @@ bool InputManager::isEventPending(uint eventID)
     }
     // Did not found the key.
     return false;
-}
-
-InputManager *InputManager::getInstance()
-{
-    return &instance;
 }

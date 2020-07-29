@@ -2,11 +2,11 @@
 #define INPUTMANAGER_H
 
 #include <map>
-
 #include <SDL2/SDL.h>
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
 
-class InputManager
+
+class Input_manager
 {
 private:
     // Key state of current frame.
@@ -18,12 +18,9 @@ private:
     glm::ivec2 globalMouseCoord;
     glm::ivec2 deltaMouseCoord;
 
-    static InputManager instance;
-
     bool wasKeyDown(uint keyID);
     void pressEvent(uint eventID);
     void updateState();
-
 
 public:
     void update();
@@ -40,7 +37,5 @@ public:
     bool isKeyReleased(uint keyID);
     bool isKeyPressed(uint keyID);
     bool isEventPending(uint eventID);
-
-    static InputManager *getInstance();
 };
 #endif // INPUTMANAGER_H
